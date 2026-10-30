@@ -4,9 +4,9 @@ import com.example.clichepiggybank.controller.exceptions.AccountNotEmptyExceptio
 import com.example.clichepiggybank.controller.exceptions.ForbiddenException;
 import com.example.clichepiggybank.controller.exceptions.UserNotFoundException;
 import com.example.clichepiggybank.model.Account;
+import com.example.clichepiggybank.model.Role;
 import com.example.clichepiggybank.model.User;
-import com.example.clichepiggybank.service.AccountStorageService;
-import com.example.clichepiggybank.service.UserStorageService;
+import com.example.clichepiggybank.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,100 +16,92 @@ import java.util.*;
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
-    private final UserStorageService userStorageService;
-    private final AccountStorageService accountStorageService;
+    private final UserRepository userRepository;
+    private final RoleRepository rolesRepository;
+    private final AccountRepository accountRepository;
 
-    public UserController(
-            UserStorageService userStorageService,
-            AccountStorageService accountStorageService
-    ) {
-        this.userStorageService = userStorageService;
-        this.accountStorageService = accountStorageService;
+    // Inject the Repository bean directly
+    public UserController(UserRepository userRepository, RoleRepository rolesRepository, AccountRepository accountRepository) {
+        this.userRepository = userRepository;
+        this.rolesRepository = rolesRepository;
+        this.accountRepository = accountRepository;
     }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(new ArrayList<>(userStorageService.loadUsers().values()));
+        return ResponseEntity.ok(userRepository.findAll());// SQL: SELECT * FROM users;
     }
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User newUser, @RequestParam("inquirerid") UUID inquirerId) {
-        HashMap<UUID, User> current = userStorageService.loadUsers();
-        if (!isAdmin(current, inquirerId)) {
-            throw new ForbiddenException(inquirerId);
+        if (userRepository.existsById(inquirerId)) {
+            userRepository.findById(inquirerId);
+            if (!isAdmin(rolesRepository.findByUserGuid(inquirerId))) {
+                throw new ForbiddenException(inquirerId);
+            }
+        } else {
+            throw new UserNotFoundException(inquirerId);
         }
-        UUID guid = UUID.randomUUID();
-        while(current.containsKey(guid)) {
-            guid = UUID.randomUUID(); // probability this line is executed: ca <current.size> in 5.3 × 10³⁶
-        }
-        newUser.setId(guid);
-        current.put(guid, newUser);
-        userStorageService.saveUsers(current);
+
+        User u = userRepository.save(newUser);
+
+        newUser.getRoles().forEach(role -> {
+            Role newRole = new Role();
+            newRole.setRole(role);
+            newRole.setUserGuid(u.getId());
+            rolesRepository.save(newRole);
+        });
+
         return ResponseEntity.ok(newUser);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<User> deleteUser(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        HashMap<UUID, User> currentUsers = userStorageService.loadUsers();
-        HashMap<UUID, Account> currentAccounts = accountStorageService.loadAccounts();
-
-        if (!isAdmin(currentUsers, inquirerId)) {
-            throw new ForbiddenException(inquirerId);
+        if (userRepository.existsById(inquirerId)) {
+            userRepository.findById(inquirerId);
+            if (!isAdmin(rolesRepository.findByUserGuid(inquirerId))) {
+                throw new ForbiddenException(inquirerId);
+            }
+        } else {
+            throw new UserNotFoundException(inquirerId);
         }
-        if (!currentUsers.containsKey(id)) {
+
+        if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
         }
-        Account toBeVerified = currentAccounts.values().stream().filter(account -> account.getOwnerId().equals(id)).findFirst().orElse(null);
-        AccountController accountController = new AccountController(accountStorageService, userStorageService);
+
+        Account toBeVerified = accountRepository.findByOwnerId(id).getFirst();
         if (toBeVerified != null) {
             if (toBeVerified.getBalance() > 0) {
                 throw new AccountNotEmptyException(toBeVerified.getId());
             } else {
-                accountController.deleteAccount(toBeVerified.getId());
+                accountRepository.deleteById(toBeVerified.getId());
             }
         }
-        User toBeDeleted = currentUsers.get(id);
-        currentUsers.remove(id);
-        userStorageService.saveUsers(currentUsers);
+        if (userRepository.findById(id).isEmpty()){
+            throw new UserNotFoundException(id);
+        };
+        List<Role> rolesToBeDeleted = rolesRepository.findByUserGuid(id);
+        User toBeDeleted = userRepository.findById(id).get();
+        userRepository.deleteById(id);
         return ResponseEntity.ok(toBeDeleted);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable UUID id) {
-        HashMap<UUID, User> users = userStorageService.loadUsers();
-        if (!users.containsKey(id)) {
+        ;
+        if (userRepository.findById(id).isEmpty()) {
             throw new UserNotFoundException(id);
         }
-        return ResponseEntity.ok(users.get(id));
+        return ResponseEntity.ok(userRepository.findById(id).get());
     }
 
-    public static boolean isAdmin(HashMap<UUID, User> users, UUID inquirerId) {
-        User inquirer;
-        try {
-            inquirer = users
-                    .values()
-                    .stream()
-                    .filter(user -> user.getId().equals(inquirerId))
-                    .findFirst()
-                    .orElseThrow();
-        } catch (NoSuchElementException e) {
-            return false;
-        }
-        return Arrays.asList(inquirer.getRoles()).contains("admin");
+    public static boolean isAdmin(List<Role> roles) {
+        return roles.stream().anyMatch(role -> role.getRole().equals("admin"));
     }
 
-    public static boolean isUser(HashMap<UUID, User> users, UUID inquirerId) {
-        User inquirer;
-        try {
-            inquirer = users
-                    .values()
-                    .stream()
-                    .filter(user -> user.getId().equals(inquirerId))
-                    .findFirst()
-                    .orElseThrow();
-        } catch (NoSuchElementException e) {
-            return false;
-        }
-        return Arrays.asList(inquirer.getRoles()).contains("user");
+    public static boolean isUser(List<Role> roles) {
+        return roles.stream().anyMatch(role -> role.getRole().equals("user"));
+
     }
 }

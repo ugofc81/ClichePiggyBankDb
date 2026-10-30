@@ -1,14 +1,10 @@
 package com.example.clichepiggybank.controller;
 
-import com.example.clichepiggybank.controller.exceptions.ForbiddenException;
-import com.example.clichepiggybank.controller.exceptions.InquirerNotFoundException;
-import com.example.clichepiggybank.controller.exceptions.SanctionNotFoundException;
+import com.example.clichepiggybank.controller.exceptions.*;
 import com.example.clichepiggybank.model.Account;
+import com.example.clichepiggybank.model.Like;
 import com.example.clichepiggybank.model.Sanction;
-import com.example.clichepiggybank.model.User;
-import com.example.clichepiggybank.service.AccountStorageService;
-import com.example.clichepiggybank.service.SanctionStorageService;
-import com.example.clichepiggybank.service.UserStorageService;
+import com.example.clichepiggybank.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,38 +14,47 @@ import java.util.*;
 @RequestMapping("/api/sanctions")
 @CrossOrigin(origins = "http://localhost:5173")
 public class SanctionController {
-    private final SanctionStorageService sanctionStorageService;
-    private final UserStorageService userStorageService;
-    private final AccountStorageService accountStorageService;
+    private final SanctionRepository sanctionRepository;
+    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
+    private final RoleRepository roleRepository;
+    private final LikeRepository likeRepository;
     private final static int AMOUNT_OF_LAST_SANCTIONS = 10;
 
-    public SanctionController(SanctionStorageService sanctionStorageService, UserStorageService userStorageService, AccountStorageService accountStorageService) {
-        this.sanctionStorageService = sanctionStorageService;
-        this.userStorageService = userStorageService;
-        this.accountStorageService = accountStorageService;
+    public SanctionController(
+            SanctionRepository sanctionRepository,
+            UserRepository userRepository,
+            AccountRepository accountRepository,
+            RoleRepository roleRepository,
+            LikeRepository likeRepository
+    ) {
+        this.sanctionRepository = sanctionRepository;
+        this.userRepository = userRepository;
+        this.accountRepository = accountRepository;
+        this.roleRepository = roleRepository;
+        this.likeRepository = likeRepository;
     }
 
     @GetMapping
     public ResponseEntity<List<Sanction>> getAllSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        HashMap <UUID, User> users = userStorageService.loadUsers();
-        if(!users.containsKey(inquirerId)) {
+        if(userRepository.findById(inquirerId).isEmpty()) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if (!UserController.isUser(users, inquirerId)) {
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        return ResponseEntity.ok(new ArrayList<>(sanctionStorageService.loadSanctions().values()));
+        return ResponseEntity.ok(new ArrayList<>(sanctionRepository.findAll()));
     }
 
     @GetMapping("/latest")
     public ResponseEntity<List<Sanction>> getLastSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        HashMap <UUID, User> users = userStorageService.loadUsers();
-        if(!users.containsKey(inquirerId)) {
+        if(userRepository.findById(inquirerId).isEmpty()) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if (!UserController.isUser(users, inquirerId)) {
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
+
         List<Sanction> sanctionList = getAllSanctions(inquirerId).getBody();
         Collections.sort(sanctionList, Comparator.comparing(Sanction::getDatetime).reversed());
         int limit = Math.min(sanctionList.size(), AMOUNT_OF_LAST_SANCTIONS);
@@ -58,15 +63,14 @@ public class SanctionController {
 
     @GetMapping("/best")
     public ResponseEntity<List<Sanction>> getBestSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        HashMap <UUID, User> users = userStorageService.loadUsers();
-        if(!users.containsKey(inquirerId)) {
+        if(userRepository.findById(inquirerId).isEmpty()) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if (!UserController.isUser(users, inquirerId)) {
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
         List<Sanction> sanctionList = getAllSanctions(inquirerId).getBody();
-        Collections.sort(sanctionList, Comparator.comparing(Sanction::getLikes).reversed());
+        Collections.sort(sanctionList, Comparator.comparing(Sanction::getLikesNumber).reversed());
         return ResponseEntity.ok(sanctionList);
     }
 
@@ -77,18 +81,17 @@ public class SanctionController {
             @RequestParam(name = "size", defaultValue = "10") Integer size,
             @RequestParam(name = "page", defaultValue = "1") Integer page,
             @RequestParam("inquirerid") UUID inquirerId) {
-        HashMap <UUID, User> users = userStorageService.loadUsers();
-        if(!users.containsKey(inquirerId)) {
+        if(userRepository.findById(inquirerId).isEmpty()) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if (!UserController.isUser(users, inquirerId)) {
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
         List<Sanction> sanctionList = getAllSanctions(inquirerId).getBody();
         Comparator c;
         switch(sort) {
             case "likes":
-                c = Comparator.comparing(Sanction::getLikes);
+                c = Comparator.comparing(Sanction::getLikesNumber);
                 break;
             default:
                 c = Comparator.comparing(Sanction::getDatetime);
@@ -105,87 +108,98 @@ public class SanctionController {
 
     @PostMapping
     public ResponseEntity<Sanction> createSanction(@RequestBody Sanction newSanction, @RequestParam("inquirerid") UUID inquirerId) {
-        HashMap<UUID, Sanction> current = sanctionStorageService.loadSanctions();
-        UUID guid = UUID.randomUUID();
-        while(current.containsKey(guid)) {
-            guid = UUID.randomUUID();
-        }
-        newSanction.setId(guid);
         newSanction.setDatetime(new Date());
 
-        User receiver = newSanction.getReceiver();
-        UserController userController = new UserController(userStorageService, accountStorageService);
-        AccountController accountController = new AccountController(accountStorageService, userStorageService);
-        User reporter = userController.getUser(inquirerId).getBody();
-        if (!Arrays.asList(reporter.getRoles()).contains("user") && !Arrays.asList(reporter.getRoles()).contains("admin")) {
+        if(userRepository.findById(newSanction.getReceiverGuid()).isEmpty()) {
+            throw new UserNotFoundException(newSanction.getReceiverGuid());
+        }
+        if(userRepository.findById(inquirerId).isEmpty()) {
+            throw new InquirerNotFoundException(inquirerId);
+        }
+        if (!UserController.isAdmin(roleRepository.findByUserGuid(inquirerId)) && !UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        newSanction.setReporter(reporter);
-        User savedReceiver = userController.getUser(receiver.getId()).getBody();
-        newSanction.getReceiver().setName(savedReceiver.getName());
-        newSanction.setLikedBy(Collections.emptySet());
-        newSanction.setLikes(0);
 
-        List<Account> accounts = accountController.getAllAccounts().getBody();
-        Account toBeCharged = accounts.stream().filter(account -> account.getOwnerId().equals(receiver.getId())).findFirst().orElse(null);
-        if (toBeCharged == null) {
-            toBeCharged = accountController.createAccount(receiver).getBody();
+        newSanction.setReporterGuid(inquirerId);
+        newSanction.setLikesNumber(0);
+
+        if (accountRepository.findByOwnerId(newSanction.getReceiverGuid()).isEmpty()) {
+            Account toBeSaved = new Account();
+            toBeSaved.setOwnerGuid(newSanction.getReceiverGuid());
+            toBeSaved.setBalance(0);
+            accountRepository.save(toBeSaved);
         }
+        Account toBeCharged = accountRepository.findByOwnerId(newSanction.getReceiverGuid()).getFirst();
         toBeCharged.setBalance(toBeCharged.getBalance() + newSanction.getAmount().amount());
-        accountController.updateAccount(toBeCharged.getId(), toBeCharged);
-        current.put(guid, newSanction);
-        sanctionStorageService.saveSanctions(current);
-        return ResponseEntity.ok(newSanction);
+        accountRepository.save(toBeCharged);
+        return ResponseEntity.ok(sanctionRepository.save(newSanction));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Sanction> getSanction(@PathVariable UUID id) {
-        HashMap<UUID, Sanction> sanctions = sanctionStorageService.loadSanctions();
-        if(!sanctions.containsKey(id)) {
+        if(!sanctionRepository.existsById(id)) {
             throw new SanctionNotFoundException(id);
         }
-        return ResponseEntity.ok(sanctions.get(id));
+        return ResponseEntity.ok(sanctionRepository.findById(id).get());
+    }
+
+    @GetMapping("/{id}/isLiked")
+    public ResponseEntity<Boolean> isLiked(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
+        if(sanctionRepository.findById(id).isEmpty()) {
+            throw new SanctionNotFoundException(id);
+        }
+        if(userRepository.findById(inquirerId).isEmpty()) {
+            throw new InquirerNotFoundException(inquirerId);
+        }
+        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isEmpty()) {
+            return ResponseEntity.ok(Boolean.FALSE);
+        }
+        return ResponseEntity.ok(Boolean.TRUE);
     }
 
     @PutMapping("/{id}/like")
     public ResponseEntity<Sanction> likeSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        HashMap<UUID, Sanction> sanctions = sanctionStorageService.loadSanctions();
-        HashMap <UUID, User> users = userStorageService.loadUsers();
-        if(!sanctions.containsKey(id)) {
+        if(sanctionRepository.findById(id).isEmpty()) {
             throw new SanctionNotFoundException(id);
         }
-        if(!users.containsKey(inquirerId)) {
+        if(userRepository.findById(inquirerId).isEmpty()) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if (!UserController.isUser(users, inquirerId)) {
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        Sanction sanction = sanctions.get(id);
-        sanction.getLikedBy().add(inquirerId);
-        sanction.setLikes(sanction.getLikedBy().size());
-        sanctions.put(id, sanction);
-        sanctionStorageService.saveSanctions(sanctions);
-        return ResponseEntity.ok(sanction);
+        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isPresent()) {
+            throw new AlreadyLikedException(id, inquirerId);
+        }
+        Like newLike = new Like();
+        newLike.setLikedGuid(id);
+        newLike.setLikerGuid(inquirerId);
+        Sanction updatableSanction = sanctionRepository.findById(id).get();
+        updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() + 1);
+        sanctionRepository.save(updatableSanction);
+        likeRepository.save(newLike);
+        return ResponseEntity.ok(updatableSanction);
     }
 
     @PutMapping("/{id}/unlike")
     public ResponseEntity<Sanction> unlikeSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        HashMap<UUID, Sanction> sanctions = sanctionStorageService.loadSanctions();
-        HashMap <UUID, User> users = userStorageService.loadUsers();
-        if(!sanctions.containsKey(id)) {
+        if(sanctionRepository.findById(id).isEmpty()) {
             throw new SanctionNotFoundException(id);
         }
-        if(!users.containsKey(inquirerId)) {
+        if(userRepository.findById(inquirerId).isEmpty()) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if (!UserController.isUser(users, inquirerId)) {
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        Sanction sanction = sanctions.get(id);
-        sanction.getLikedBy().remove(inquirerId);
-        sanction.setLikes(sanction.getLikedBy().size());
-        sanctions.put(id, sanction);
-        sanctionStorageService.saveSanctions(sanctions);
-        return ResponseEntity.ok(sanction);
+        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isEmpty()) {
+            throw new LikeNotFoundException(id, inquirerId);
+        }
+        Like deletableLike = likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).get();
+        Sanction updatableSanction = sanctionRepository.findById(id).get();
+        updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() - 1);
+        sanctionRepository.save(updatableSanction);
+        likeRepository.delete(deletableLike);
+        return ResponseEntity.ok(updatableSanction);
     }
 }

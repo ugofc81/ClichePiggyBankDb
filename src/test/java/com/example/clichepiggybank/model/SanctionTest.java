@@ -16,7 +16,7 @@ class SanctionTest {
 
     @Test
     void shouldGetAndSetFieldsCorrectly() {
-        Sanction sanction = new Sanction(null, null, null, null, null, null, null, null);
+        Sanction sanction = new Sanction();
         UUID newSanctionGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
         UUID newReporterGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
         UUID newReceiverGuid = UUID.fromString("f6774142-8b20-45fd-bd62-c1dab2a678f6");
@@ -24,22 +24,19 @@ class SanctionTest {
         User newReporter = new User(newReporterGuid, "alice", roles);
         User newReceiver = new User(newReceiverGuid, "bob", roles);
         Date datetime = new Date();
-        Set<UUID> emptySet = Collections.emptySet();
         sanction.setId(newSanctionGuid);
-        sanction.setReporter(newReporter);
-        sanction.setReceiver(newReceiver);
+        sanction.setReporterGuid(newReporter.getId());
+        sanction.setReceiverGuid(newReceiver.getId());
         sanction.setAmount(SanctionAmount.HIGH);
         sanction.setReason("some reason");
         sanction.setDatetime(datetime);
-        sanction.setLikedBy(emptySet);
-        sanction.setLikes(0);
+        sanction.setLikesNumber(0);
 
         assertThat(sanction.getId()).isEqualTo(newSanctionGuid);
-        assertThat(sanction.getReporter().getId()).isEqualTo(newReporterGuid);
-        assertThat(sanction.getReceiver().getId()).isEqualTo(newReceiverGuid);
+        assertThat(sanction.getReporterGuid()).isEqualTo(newReporterGuid);
+        assertThat(sanction.getReceiverGuid()).isEqualTo(newReceiverGuid);
         assertThat(sanction.getAmount()).isEqualTo(SanctionAmount.HIGH);
-        assertThat(sanction.getLikedBy()).isEqualTo(emptySet);
-        assertThat(sanction.getLikes()).isEqualTo(0);
+        assertThat(sanction.getLikesNumber()).isEqualTo(0);
     }
 
     @Test
@@ -52,15 +49,14 @@ class SanctionTest {
         User newReceiver = new User(newReceiverGuid, "bob", roles);
         Date datetime = new Date();
         Set<UUID> emptySet = Collections.emptySet();
-        Sanction sanction = new Sanction(
-                newSanctionGuid,
-                newReporter,
-                newReceiver,
-                SanctionAmount.HIGH,
-                "new reason",
-                datetime,
-                emptySet,
-                0);
+        Sanction sanction = new Sanction();
+        sanction.setId(newSanctionGuid);
+        sanction.setReporterGuid(newReporter.getId());
+        sanction.setReceiverGuid(newReceiver.getId());
+        sanction.setAmount(SanctionAmount.HIGH);
+        sanction.setReason("new reason");
+        sanction.setDatetime(datetime);
+        sanction.setLikesNumber(0);
 
         String jsonResult = objectMapper.writeValueAsString(sanction);
 
@@ -99,8 +95,8 @@ class SanctionTest {
 
         assertThat(sanctionResult).isNotNull();
         assertThat(sanctionResult.getId().toString()).isEqualTo("7b485c91-95af-4153-b51a-6b4310a368e0");
-        assertThat(sanctionResult.getReporter().getId().toString()).isEqualTo("27ee6c9a-ce75-4515-a4a8-27e755efe0e2");
-        assertThat(sanctionResult.getReceiver().getId().toString()).isEqualTo("fba592ba-36c3-4479-ba38-bcaeceff9ff0");
+        assertThat(sanctionResult.getReporterGuid().toString()).isEqualTo("27ee6c9a-ce75-4515-a4a8-27e755efe0e2");
+        assertThat(sanctionResult.getReceiverGuid().toString()).isEqualTo("fba592ba-36c3-4479-ba38-bcaeceff9ff0");
         assertThat(sanctionResult.getAmount()).isEqualTo(SanctionAmount.STANDARD);
         assertThat(sanctionResult.getReason()).isEqualTo("abce");
     }

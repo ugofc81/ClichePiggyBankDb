@@ -3,6 +3,8 @@ package com.example.clichepiggybank.model;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,9 +15,10 @@ class UserTest {
 
     @Test
     void shouldGetAndSetFieldsCorrectly() {
-        User user = new User(null, null, null);
+        User user = new User();
         UUID newGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
-        String[] roles = {"user"};
+        List<String> roles = new ArrayList<>() {};
+        roles.add("user");
         user.setId(newGuid);
         user.setName("john_doe");
         user.setRoles(roles);
@@ -28,8 +31,12 @@ class UserTest {
     @Test
     void shouldSerializeToJsonSuccessfully() throws Exception {
         UUID newGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
-        String[] roles = {"user"};
-        User user = new User(newGuid, "alice", roles);
+        List<String> roles = new ArrayList<>() {};
+        roles.add("user");
+        User user = new User();
+        user.setId(newGuid);
+        user.setName("alice");
+        user.setRoles(roles);
 
         String jsonResult = objectMapper.writeValueAsString(user);
 

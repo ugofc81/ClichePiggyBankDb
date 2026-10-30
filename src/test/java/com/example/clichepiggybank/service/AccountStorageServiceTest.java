@@ -53,7 +53,10 @@ public class AccountStorageServiceTest {
         UUID newAccountGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
         UUID newUserGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
 
-        Account newAccount = new Account(newAccountGuid, newUserGuid, 0);
+        Account newAccount = new Account();
+        newAccount.setId(newAccountGuid);
+        newAccount.setOwnerGuid(newUserGuid);
+        newAccount.setBalance(0);
         testAccounts.put(newAccountGuid, newAccount);
 
         storageService.saveAccounts(testAccounts);
@@ -61,7 +64,7 @@ public class AccountStorageServiceTest {
 
         assertThat(loadedAccounts).hasSize(1);
         assertThat(loadedAccounts.get(newAccountGuid).getId()).isEqualTo(newAccountGuid);
-        assertThat(loadedAccounts.get(newAccountGuid).getOwnerId()).isEqualTo(newUserGuid);
+        assertThat(loadedAccounts.get(newAccountGuid).getOwnerGuid()).isEqualTo(newUserGuid);
         assertThat(loadedAccounts.get(newAccountGuid).getBalance()).isEqualTo(0);
     }
 
@@ -70,7 +73,11 @@ public class AccountStorageServiceTest {
         HashMap<UUID, Account> testAccounts = new HashMap<>();
         UUID newAccountGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
         UUID newUserGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
-        testAccounts.put(newAccountGuid, new Account(newAccountGuid, newUserGuid, 0));
+        Account newAccount = new Account();
+        newAccount.setId(newAccountGuid);
+        newAccount.setOwnerGuid(newUserGuid);
+        newAccount.setBalance(0);
+        testAccounts.put(newAccount);
 
         storageService.saveAccounts(testAccounts);
 

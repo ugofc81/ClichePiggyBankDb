@@ -2,14 +2,12 @@ package com.example.clichepiggybank.service;
 
 import com.example.clichepiggybank.model.Sanction;
 import com.example.clichepiggybank.model.SanctionAmount;
-import com.example.clichepiggybank.model.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import tools.jackson.databind.ObjectMapper;
 
-import javax.print.attribute.SetOfIntegerSyntax;
 import java.io.File;
 import java.util.*;
 
@@ -56,19 +54,15 @@ public class SanctionStorageServiceTest {
         UUID newReporterGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
         UUID newReceiverGuid = UUID.fromString("f6774142-8b20-45fd-bd62-c1dab2a678f6");
         Date now = new Date();
-        String[] roles = {"roles"};
         String reason = "Sample reason";
-        Set<UUID> emptySet = Collections.emptySet();
-        Sanction newSanction = new Sanction(
-                newSanctionGuid,
-                new User(newReporterGuid, "ReporterName", roles),
-                new User(newReceiverGuid, "SanctionedName", roles),
-                SanctionAmount.HIGH,
-                reason,
-                now,
-                emptySet,
-                0
-                );
+        Sanction newSanction = new Sanction();
+        newSanction.setId(newSanctionGuid);
+        newSanction.setReporterGuid(newReporterGuid);
+        newSanction.setReceiverGuid(newReceiverGuid);
+        newSanction.setAmount(SanctionAmount.HIGH);
+        newSanction.setReason(reason);
+        newSanction.setDatetime(now);
+        newSanction.setLikesNumber(0);
         testSanctions.put(newSanctionGuid, newSanction);
 
         storageService.saveSanctions(testSanctions);
@@ -76,8 +70,8 @@ public class SanctionStorageServiceTest {
 
         assertThat(loadedSanctions).hasSize(1);
         assertThat(loadedSanctions.get(newSanctionGuid).getId()).isEqualTo(newSanctionGuid);
-        assertThat(loadedSanctions.get(newSanctionGuid).getReporter().getId()).isEqualTo(newReporterGuid);
-        assertThat(loadedSanctions.get(newSanctionGuid).getReceiver().getId()).isEqualTo(newReceiverGuid);
+        assertThat(loadedSanctions.get(newSanctionGuid).getReporterGuid()).isEqualTo(newReporterGuid);
+        assertThat(loadedSanctions.get(newSanctionGuid).getReceiverGuid()).isEqualTo(newReceiverGuid);
         assertThat(loadedSanctions.get(newSanctionGuid).getDatetime()).isEqualTo(now);
         assertThat(loadedSanctions.get(newSanctionGuid).getReason()).isEqualTo(reason);
     }
@@ -89,19 +83,15 @@ public class SanctionStorageServiceTest {
         UUID newReporterGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
         UUID newReceiverGuid = UUID.fromString("f6774142-8b20-45fd-bd62-c1dab2a678f6");
         Date now = new Date();
-        String[] roles = {"roles"};
         String reason = "Sample reason";
-        Set<UUID> emptySet = Collections.emptySet();
-        Sanction newSanction = new Sanction(
-                newSanctionGuid,
-                new User(newReporterGuid, "ReporterName", roles),
-                new User(newReceiverGuid, "SanctionedName", roles),
-                SanctionAmount.HIGH,
-                reason,
-                now,
-                emptySet,
-                0
-        );
+        Sanction newSanction = new Sanction();
+        newSanction.setId(newSanctionGuid);
+        newSanction.setReporterGuid(newReporterGuid);
+        newSanction.setReceiverGuid(newReceiverGuid);
+        newSanction.setAmount(SanctionAmount.HIGH);
+        newSanction.setReason(reason);
+        newSanction.setDatetime(now);
+        newSanction.setLikesNumber(0);
         testSanctions.put(newSanctionGuid, newSanction);
 
         storageService.saveSanctions(testSanctions);

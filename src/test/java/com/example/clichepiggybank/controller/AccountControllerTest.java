@@ -12,7 +12,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,7 +39,12 @@ class AccountControllerTest {
     public static Account produceAccount(final String accountGuidString, final String ownerGuidString, final double balance) {
         UUID accountGuid = UUID.fromString(accountGuidString);
         UUID ownerGuid = UUID.fromString(ownerGuidString);
-        return new Account(accountGuid, ownerGuid, balance);
+        Account toBeReturned = new Account();
+
+        toBeReturned.setId(accountGuid);
+        toBeReturned.setOwnerGuid(ownerGuid);
+        toBeReturned.setBalance(balance);
+        return toBeReturned;
     }
 
     @Test
@@ -50,7 +57,7 @@ class AccountControllerTest {
         mockMvc.perform(get("/api/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$..id").value(account.getId().toString()))
-                .andExpect(jsonPath("$..ownerId").value(account.getOwnerId().toString()))
+                .andExpect(jsonPath("$..ownerId").value(account.getOwnerGuid().toString()))
                 .andExpect(jsonPath("$..balance").value(account.getBalance()));
     }
 
@@ -59,7 +66,10 @@ class AccountControllerTest {
         // Arrange
         UUID accountId = UUID.randomUUID();
         UUID ownerId = UUID.randomUUID();
-        Account account = new Account(accountId, ownerId, 100.50);
+        Account account = new Account();
+        account.setId(accountId);
+        account.setOwnerGuid(ownerId);
+        account.setBalance(100.50);
 
         HashMap<UUID, Account> map = new HashMap<>();
         map.put(accountId, account);
@@ -90,14 +100,23 @@ class AccountControllerTest {
         UUID accountId = UUID.randomUUID();
         UUID ownerId = UUID.randomUUID();
         UUID adminId = UUID.randomUUID();
-        Account account = new Account(accountId, ownerId, 500.0);
+        Account account = new Account();
+        account.setId(accountId);
+        account.setOwnerGuid(ownerId);
+        account.setBalance(500.0);
 
         HashMap<UUID, Account> accountMap = new HashMap<>();
         accountMap.put(accountId, account);
 
         HashMap<UUID, User> userMap = new HashMap<>();
         // Assuming your User object can handle an admin setup or your UserController mock checks this
-        User adminUser = new User(adminId, "admin_user", new String[]{"admin"});
+        List<String> roles = new ArrayList<>();
+        roles.add("admin");
+        User adminUser = new User();
+        adminUser.setId(adminId);
+        adminUser.setName("admin_user");
+        adminUser.setRoles(roles);
+
         userMap.put(adminId, adminUser);
 
         Mockito.when(accountStorageService.loadAccounts()).thenReturn(accountMap);
@@ -115,8 +134,16 @@ class AccountControllerTest {
     void shouldReturn404WhenResettingAccountThatDoesNotExist() throws Exception {
         UUID missingAccountId = UUID.randomUUID();
         UUID adminId = UUID.randomUUID();
+
+        List<String> roles = new ArrayList<>();
+        roles.add("admin");
+        User adminUser = new User();
+        adminUser.setId(adminId);
+        adminUser.setName("admin_user");
+        adminUser.setRoles(roles);
+
         HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(adminId, new User(adminId, "admin_user", new String[]{"admin"}));
+        userMap.put(adminId, adminUser);
 
         Mockito.when(accountStorageService.loadAccounts()).thenReturn(new HashMap<>());
         Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);

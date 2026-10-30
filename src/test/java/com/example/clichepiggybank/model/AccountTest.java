@@ -13,15 +13,15 @@ class AccountTest {
 
     @Test
     void shouldGetAndSetFieldsCorrectly() {
-        Account account = new Account(null, null, 0);
         UUID newAccountGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
         UUID newUserGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
+        Account account = new Account();
         account.setId(newAccountGuid);
-        account.setOwnerId(newUserGuid);
+        account.setOwnerGuid(newUserGuid);
         account.setBalance(15);
 
         assertThat(account.getId()).isEqualTo(newAccountGuid);
-        assertThat(account.getOwnerId()).isEqualTo(newUserGuid);
+        assertThat(account.getOwnerGuid()).isEqualTo(newUserGuid);
         assertThat(account.getBalance()).isEqualTo(15);
     }
 
@@ -29,7 +29,7 @@ class AccountTest {
     void shouldSerializeToJsonSuccessfully() throws Exception {
         UUID newAccountGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
         UUID newUserGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
-        Account account = new Account(newAccountGuid, newUserGuid, 0);
+        Account account = new Account();
 
         String jsonResult = objectMapper.writeValueAsString(account);
 
@@ -50,7 +50,7 @@ class AccountTest {
         // Assert
         assertThat(accountResult).isNotNull();
         assertThat(accountResult.getId().toString()).isEqualTo("55c1dc52-fe0d-4447-a53a-5566f60c5113");
-        assertThat(accountResult.getOwnerId().toString()).isEqualTo("be4523cf-6cba-4747-8989-ce8e21470e34");
+        assertThat(accountResult.getOwnerGuid().toString()).isEqualTo("be4523cf-6cba-4747-8989-ce8e21470e34");
         assertThat(accountResult.getBalance()).isEqualTo(5);
     }
 }

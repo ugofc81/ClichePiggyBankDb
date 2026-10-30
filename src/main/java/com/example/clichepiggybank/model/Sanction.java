@@ -1,29 +1,37 @@
 package com.example.clichepiggybank.model;
 
+import jakarta.persistence.*;
+
 import java.util.Date;
-import java.util.Set;
 import java.util.UUID;
 
+@Entity
+@Table(name = "sanctions") // Maps this class to a "users" table in MySQL
 public class Sanction {
-    private UUID id;
-    private User reporter;
-    private User receiver;
-    private SanctionAmount amount;
-    private String reason;
-    private Date datetime;
-    private Set<UUID> likedBy;
-    private Integer likes;
 
-    public Sanction(UUID id, User reporter, User receiver, SanctionAmount amount, String reason, Date datetime, Set<UUID> likedBy, Integer likes) {
-        this.id = id;
-        this.reporter = reporter;
-        this.receiver = receiver;
-        this.amount = amount;
-        this.reason = reason;
-        this.datetime = datetime;
-        this.likedBy = likedBy;
-        this.likes = likes;
-    }
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID) // Automatically generates clean UUIDs!
+    private UUID id;
+
+    @Column(nullable = false, unique = false, name = "reporter_guid")
+    private UUID reporterGuid;
+
+    @Column(nullable = false, unique = false, name = "receiver_guid")
+    private UUID receiverGuid;
+
+    @Column(nullable = false, unique = false, name = "amount")
+    private SanctionAmount amount;
+
+    @Column(nullable = false, unique = false, name = "reason")
+    private String reason;
+
+    @Column(nullable = false, unique = false, name = "datetime")
+    private Date datetime;
+
+    @Column(nullable = false, unique = false, name = "likes_number")
+    private Integer likesNumber;
+
+    public Sanction() {}
 
     public UUID getId() {
         return id;
@@ -33,20 +41,20 @@ public class Sanction {
         this.id = id;
     }
 
-    public User getReporter() {
-        return reporter;
+    public UUID getReporterGuid() {
+        return reporterGuid;
     }
 
-    public void setReporter(User reporter) {
-        this.reporter = reporter;
+    public void setReporterGuid(UUID reporterGuid) {
+        this.reporterGuid = reporterGuid;
     }
 
-    public User getReceiver() {
-        return receiver;
+    public UUID getReceiverGuid() {
+        return receiverGuid;
     }
 
-    public void setReceiver(User receiver) {
-        this.receiver = receiver;
+    public void setReceiverGuid(UUID receiverGuid) {
+        this.receiverGuid = receiverGuid;
     }
 
     public SanctionAmount getAmount() {
@@ -73,19 +81,11 @@ public class Sanction {
         this.datetime = datetime;
     }
 
-    public Set<UUID> getLikedBy() {
-        return likedBy;
+    public Integer getLikesNumber() {
+        return likesNumber;
     }
 
-    public void setLikedBy(Set<UUID> likedBy) {
-        this.likedBy = likedBy;
-    }
-
-    public Integer getLikes() {
-        return likes;
-    }
-
-    public void setLikes(Integer likes) {
-        this.likes = likes;
+    public void setLikesNumber(Integer likesNumber) {
+        this.likesNumber = likesNumber;
     }
 }

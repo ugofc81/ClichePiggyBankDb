@@ -14,11 +14,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,16 +66,14 @@ class SanctionControllerTest {
         Mockito.when(accountStorageService.loadAccounts()).thenReturn(new HashMap<>()); // Triggers account creation branch!
         Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(new HashMap<>());
 
-        Sanction incomingSanction = new Sanction(
-                sanctionId,
-                reporter,
-                receiver,
-                com.example.clichepiggybank.model.SanctionAmount.HIGH,
-                "run you fools",
-                new Date(),
-                Collections.emptySet(),
-                0
-                );
+        Sanction incomingSanction = new Sanction();
+        incomingSanction.setId(sanctionId);
+        incomingSanction.setReporterGuid(reporter.getId());
+        incomingSanction.setReceiverGuid(receiver.getId());
+        incomingSanction.setAmount(com.example.clichepiggybank.model.SanctionAmount.HIGH);
+        incomingSanction.setReason("run you fools");
+        incomingSanction.setDatetime(new Date());
+        incomingSanction.setLikesNumber(0);
 
         mockMvc.perform(post("/api/sanctions")
                         .param("inquirerid", inquirerId)
@@ -99,16 +95,14 @@ class SanctionControllerTest {
         UUID sanctionId = UUID.randomUUID();
         User reporter = UserControllerTest.produceUser("990b0301-9262-4048-a4d6-4f7ad19eeb46", "alice", "user");
         User receiver = UserControllerTest.produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "user");
-        Sanction sanction = new Sanction(
-                sanctionId,
-                reporter,
-                receiver,
-                SanctionAmount.STANDARD,
-                "late payment",
-                new Date(),
-                Collections.emptySet(),
-                0
-        );
+        Sanction sanction = new Sanction();
+        sanction.setId(sanctionId);
+        sanction.setReporterGuid(reporter.getId());
+        sanction.setReceiverGuid(receiver.getId());
+        sanction.setAmount(SanctionAmount.HIGH);
+        sanction.setReason("late payment");
+        sanction.setDatetime(new Date());
+        sanction.setLikesNumber(0);
 
         HashMap<UUID, Sanction> sanctions = new HashMap<>();
         sanctions.put(sanctionId, sanction);
@@ -270,7 +264,6 @@ class SanctionControllerTest {
         User inquirer = configureInquirer();
         UUID otherUserId = UUID.randomUUID();
         Sanction sanction = produceSanction(UUID.randomUUID(), 1L, 1);
-        sanction.setLikedBy(new HashSet<>(Collections.singleton(otherUserId)));
         HashMap<UUID, Sanction> sanctions = new HashMap<>();
         sanctions.put(sanction.getId(), sanction);
         Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
@@ -305,7 +298,6 @@ class SanctionControllerTest {
         User inquirer = configureInquirer();
         UUID otherUserId = UUID.randomUUID();
         Sanction sanction = produceSanction(UUID.randomUUID(), 1L, 2);
-        sanction.setLikedBy(new HashSet<>(List.of(inquirer.getId(), otherUserId)));
         HashMap<UUID, Sanction> sanctions = new HashMap<>();
         sanctions.put(sanction.getId(), sanction);
         Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
@@ -355,15 +347,16 @@ class SanctionControllerTest {
                 "bob",
                 "user"
         );
-        return new Sanction(
-                id,
-                reporter,
-                receiver,
-                SanctionAmount.STANDARD,
-                "late payment",
-                new Date(datetime),
-                Collections.emptySet(),
-                likes
-        );
+
+        Sanction sanction = new Sanction();
+        sanction.setId(id);
+        sanction.setReporterGuid(reporter.getId());
+        sanction.setReceiverGuid(receiver.getId());
+        sanction.setAmount(SanctionAmount.STANDARD);
+        sanction.setReason("late payment");
+        sanction.setDatetime(new Date(datetime));
+        sanction.setLikesNumber(likes);
+
+        return sanction;
     }
 }

@@ -61,6 +61,26 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(LikeNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleLikeNotFound(LikeNotFoundException ex) {
+        Map<String, Object> body = Map.of(
+                "status", HttpStatus.NOT_FOUND.value(),
+                "error", "Not Found",
+                "message", ex.getMessage()
+        );
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AlreadyLikedException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyLiked(LikeNotFoundException ex) {
+        Map<String, Object> body = Map.of(
+                "status", HttpStatus.CONFLICT.value(),
+                "error", "Conflict",
+                "message", ex.getMessage()
+        );
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(AccountNotEmptyException.class)
     public ResponseEntity<Map<String, Object>> handleAccountNotEmpty(AccountNotEmptyException ex) {
         Map<String, Object> body = Map.of(
