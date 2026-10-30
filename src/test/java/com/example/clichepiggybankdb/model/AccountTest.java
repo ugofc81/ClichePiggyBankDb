@@ -27,22 +27,21 @@ class AccountTest {
 
     @Test
     void shouldSerializeToJsonSuccessfully() throws Exception {
-        UUID newAccountGuid = UUID.fromString("55c1dc52-fe0d-4447-a53a-5566f60c5113");
-        UUID newUserGuid = UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34");
         Account account = new Account();
+        account.setOwnerGuid(UUID.fromString("be4523cf-6cba-4747-8989-ce8e21470e34"));
+        account.setBalance(0);
 
         String jsonResult = objectMapper.writeValueAsString(account);
 
         assertThat(jsonResult)
-                .contains("\"id\":\"55c1dc52-fe0d-4447-a53a-5566f60c5113\"")
-                .contains("\"ownerId\":\"be4523cf-6cba-4747-8989-ce8e21470e34\"")
+                .contains("\"ownerGuid\":\"be4523cf-6cba-4747-8989-ce8e21470e34\"")
                 .contains("\"balance\":0");
     }
 
     @Test
     void shouldDeserializeFromJsonSuccessfully() throws Exception {
         // Arrange - A JSON string exactly like what Postman sends
-        String inputJson = "{\"id\":\"55c1dc52-fe0d-4447-a53a-5566f60c5113\",\"ownerId\":\"be4523cf-6cba-4747-8989-ce8e21470e34\",\"balance\":5}";
+        String inputJson = "{\"id\":\"55c1dc52-fe0d-4447-a53a-5566f60c5113\",\"ownerGuid\":\"be4523cf-6cba-4747-8989-ce8e21470e34\",\"balance\":5}";
 
         // Act - Turn the JSON string back into a Java Account object
         Account accountResult = objectMapper.readValue(inputJson, Account.class);
