@@ -2,8 +2,8 @@ package com.example.clichepiggybankdb.controller;
 
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.User;
-import com.example.clichepiggybankdb.service.AccountStorageService;
-import com.example.clichepiggybankdb.service.UserStorageService;
+import com.example.clichepiggybankdb.service.AccountRepository;
+import com.example.clichepiggybankdb.service.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -31,23 +32,28 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private UserStorageService userStorageService;
+    private UserRepository userRepository;
 
     @MockitoBean
-    private AccountStorageService accountStorageService;
+    private AccountRepository accountRepository;
 
     public static User produceUser(final String guid, final String name, final String role) {
         UUID newGuid = UUID.fromString(guid);
-        String[] roles = {role};
-        return new User(newGuid, name, roles);
+        List<String> roles = new ArrayList<>();
+        roles.add(role);
+        User user = new User();
+        user.setId(newGuid);
+        user.setName(name);
+        user.setRoles(roles);
+        return user;
     }
 
     @Test
     void shouldReturnAllUsers() throws Exception {
         User user = produceUser("55c1dc52-fe0d-4447-a53a-5566f60c5113", "alice", "user");
-        HashMap<UUID, User> map = new HashMap<>();
-        map.put(user.getId(), user);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(map);
+        List<User> usersList = new ArrayList<>();
+        usersList.add(user);
+        Mockito.when(userRepository.findAll()).thenReturn(usersList);
 
         // Act & Assert
         mockMvc.perform(get("/api/users"))
@@ -60,11 +66,14 @@ public class UserControllerTest {
     @Test
     void shouldCreateUser() throws Exception {
         User admin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "admin");
-        String[] userRoles = {"user"};
-        User user = new User(null, "alice", userRoles);
-        HashMap<UUID, User> map = new HashMap<>();
-        map.put(admin.getId(), admin);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(map);
+        List<String> userRoles = new ArrayList<>();
+        userRoles.add("user");
+        User user = new User();
+        user.setName("alice");
+        user.setRoles(userRoles);
+        List<User> map = new ArrayList<>();
+        map.add(admin);
+        Mockito.when(userRepository.findAll()).thenReturn(map);
 
         mockMvc.perform(post("/api/users")
                         .param("inquirerid", admin.getId().toString())
@@ -79,14 +88,14 @@ public class UserControllerTest {
     void shouldDeleteUser() throws Exception {
         User admin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "admin");
         User user = produceUser("990b0301-9262-4048-a4d6-4f7ad19eeb46", "alice", "user");
-        HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(admin.getId(), admin);
-        userMap.put(user.getId(), user);
+        List<User> userMap = new ArrayList<>();
+        userMap.add(admin);
+        userMap.add(user);
         Account account =  AccountControllerTest.produceAccount("c46b72b7-0382-4a73-b92e-be7580029e56", user.getId().toString(), 0);
-        HashMap<UUID, Account> accountMap = new HashMap<>();
-        accountMap.put(account.getId(), account);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(accountMap);
+        List<Account> accountMap = new ArrayList<>();
+        accountMap.add(account);
+        Mockito.when(userRepository.findAll()).thenReturn(userMap);
+        Mockito.when(accountRepository.findAll()).thenReturn(accountMap);
 
         mockMvc.perform(delete("/api/users/{id}", "990b0301-9262-4048-a4d6-4f7ad19eeb46")
                         .param("inquirerid", "c0a6d648-d769-4ebb-a0f0-7d44a0b0462e")
@@ -100,10 +109,10 @@ public class UserControllerTest {
     void shouldGetUser() throws Exception {
         User admin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "admin");
         User user = produceUser("990b0301-9262-4048-a4d6-4f7ad19eeb46", "alice", "user");
-        HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(admin.getId(), admin);
-        userMap.put(user.getId(), user);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        List<User> userMap = new ArrayList<>();
+        userMap.add(admin);
+        userMap.add(user);
+        Mockito.when(userRepository.findAll()).thenReturn(userMap);
 
         mockMvc.perform(get("/api/users/{id}", user.getId().toString())
                         .param("inquirerid", admin.getId().toString())
@@ -117,9 +126,9 @@ public class UserControllerTest {
     void shouldReturn404WhenUserNotFoundExceptionIsThrown() throws Exception {
         User admin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "admin");
         User user = produceUser("990b0301-9262-4048-a4d6-4f7ad19eeb46", "alice", "user");
-        HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(admin.getId(), admin);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        List<User> userMap = new ArrayList<>();
+        userMap.add(admin);
+        Mockito.when(userRepository.findAll()).thenReturn(userMap);
 
         mockMvc.perform(get("/api/users/{id}", user.getId().toString())
                 .param("inquirerid", admin.getId().toString()))
@@ -130,10 +139,10 @@ public class UserControllerTest {
     void shouldReturn403WhenForbiddenExceptionIsThrownForDeletion() throws Exception {
         User notAdmin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "user");
         User user = produceUser("990b0301-9262-4048-a4d6-4f7ad19eeb46", "alice", "user");
-        HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(notAdmin.getId(), notAdmin);
-        userMap.put(user.getId(), user);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        List<User> userMap = new ArrayList<>();
+        userMap.add(notAdmin);
+        userMap.add(user);
+        Mockito.when(userRepository.findAll()).thenReturn(userMap);
 
         mockMvc.perform(delete("/api/users/{id}", user.getId().toString())
                 .param("inquirerid", notAdmin.getId().toString()))
@@ -144,9 +153,9 @@ public class UserControllerTest {
     void shouldReturn404WhenNotFoundExceptionIsThrownForDeletion() throws Exception {
         User notAdmin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "admin");
         User user = produceUser("990b0301-9262-4048-a4d6-4f7ad19eeb46", "alice", "user");
-        HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(notAdmin.getId(), notAdmin);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        List<User> userMap = new ArrayList<>();
+        userMap.add(notAdmin);
+        Mockito.when(userRepository.findAll()).thenReturn(userMap);
 
         mockMvc.perform(delete("/api/users/{id}", user.getId().toString())
                 .param("inquirerid", notAdmin.getId().toString()))
@@ -157,14 +166,14 @@ public class UserControllerTest {
     void shouldReturn403WhenForbiddenExceptionIsThrownForAccountNotEmpty() throws Exception {
         User notAdmin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "admin");
         User user = produceUser("990b0301-9262-4048-a4d6-4f7ad19eeb46", "alice", "user");
-        HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(notAdmin.getId(), notAdmin);
-        userMap.put(user.getId(), user);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        List<User> userMap = new ArrayList<>();
+        userMap.add(notAdmin);
+        userMap.add(user);
+        Mockito.when(userRepository.findAll()).thenReturn(userMap);
         Account account = AccountControllerTest.produceAccount("c46b72b7-0382-4a73-b92e-be7580029e56", user.getId().toString(), 5);
-        HashMap<UUID, Account> accountMap = new HashMap<>();
-        accountMap.put(account.getId(), account);
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(accountMap);
+        List<Account> accountMap = new ArrayList<>();
+        accountMap.add(account);
+        Mockito.when(accountRepository.findAll()).thenReturn(accountMap);
 
         mockMvc.perform(delete("/api/users/{id}", user.getId().toString())
                 .param("inquirerid", notAdmin.getId().toString()))
@@ -174,11 +183,14 @@ public class UserControllerTest {
     @Test
     void shouldReturn403WhenForbiddenExceptionIsThrownForCreatorWithNoRights() throws Exception {
         User admin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "user");
-        String[] userRoles = {"user"};
-        User user = new User(null, "alice", userRoles);
-        HashMap<UUID, User> map = new HashMap<>();
-        map.put(admin.getId(), admin);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(map);
+        List<String> userRoles = new ArrayList<>();
+        userRoles.add("user");
+        User user = new User();
+        user.setName("alice");
+        user.setRoles(userRoles);
+        List<User> map = new ArrayList<>();
+        map.add(admin);
+        Mockito.when(userRepository.findAll()).thenReturn(map);
 
         mockMvc.perform(post("/api/users")
                         .param("inquirerid", admin.getId().toString())
@@ -190,10 +202,13 @@ public class UserControllerTest {
     @Test
     void shouldReturn403WhenForbiddenExceptionIsThrownForCreatorNotExistent() throws Exception {
         User admin = produceUser("c0a6d648-d769-4ebb-a0f0-7d44a0b0462e", "bob", "user");
-        String[] userRoles = {"user"};
-        User user = new User(null, "alice", userRoles);
-        HashMap<UUID, User> map = new HashMap<>();
-        Mockito.when(userStorageService.loadUsers()).thenReturn(map);
+        List<String> userRoles = new ArrayList<>();
+        userRoles.add("user");
+        User user = new User();
+        user.setName("alice");
+        user.setRoles(userRoles);
+        List<User> map = new ArrayList<>();
+        Mockito.when(userRepository.findAll()).thenReturn(map);
 
         mockMvc.perform(post("/api/users")
                         .param("inquirerid", admin.getId().toString())

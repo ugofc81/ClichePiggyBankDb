@@ -123,13 +123,13 @@ public class SanctionController {
         newSanction.setReporterGuid(inquirerId);
         newSanction.setLikesNumber(0);
 
-        if (accountRepository.findByOwnerId(newSanction.getReceiverGuid()).isEmpty()) {
+        if (accountRepository.findByOwnerGuid(newSanction.getReceiverGuid()).isEmpty()) {
             Account toBeSaved = new Account();
             toBeSaved.setOwnerGuid(newSanction.getReceiverGuid());
             toBeSaved.setBalance(0);
             accountRepository.save(toBeSaved);
         }
-        Account toBeCharged = accountRepository.findByOwnerId(newSanction.getReceiverGuid()).getFirst();
+        Account toBeCharged = accountRepository.findByOwnerGuid(newSanction.getReceiverGuid()).getFirst();
         toBeCharged.setBalance(toBeCharged.getBalance() + newSanction.getAmount().amount());
         accountRepository.save(toBeCharged);
         return ResponseEntity.ok(sanctionRepository.save(newSanction));

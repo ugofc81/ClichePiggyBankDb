@@ -2,8 +2,7 @@ package com.example.clichepiggybankdb.controller;
 
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.User;
-import com.example.clichepiggybankdb.service.AccountStorageService;
-import com.example.clichepiggybankdb.service.UserStorageService;
+import com.example.clichepiggybankdb.service.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,10 +29,10 @@ class AccountControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private UserStorageService userStorageService;
+    private UserRepository userRepository;
 
     @MockitoBean
-    private AccountStorageService accountStorageService;
+    private AccountRepository accountRepository;
 
     public static Account produceAccount(final String accountGuidString, final String ownerGuidString, final double balance) {
         UUID accountGuid = UUID.fromString(accountGuidString);
@@ -50,14 +48,14 @@ class AccountControllerTest {
     @Test
     void shouldReturnAllAccounts() throws Exception {
         Account account = produceAccount("c46b72b7-0382-4a73-b92e-be7580029e56", "55c1dc52-fe0d-4447-a53a-5566f60c5113", 5);
-        HashMap<UUID, Account> map = new HashMap<>();
-        map.put(account.getId(), account);
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(map);
+        List<Account> accountList = new ArrayList<>();
+        accountList.add(account);
+        Mockito.when(accountRepository.findAll()).thenReturn(accountList);
 
         mockMvc.perform(get("/api/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$..id").value(account.getId().toString()))
-                .andExpect(jsonPath("$..ownerId").value(account.getOwnerGuid().toString()))
+                .andExpect(jsonPath("$..ownerGuid").value(account.getOwnerGuid().toString()))
                 .andExpect(jsonPath("$..balance").value(account.getBalance()));
     }
 
@@ -65,16 +63,16 @@ class AccountControllerTest {
     void shouldReturnAccountById() throws Exception {
         // Arrange
         UUID accountId = UUID.randomUUID();
-        UUID ownerId = UUID.randomUUID();
+        UUID ownerGuid = UUID.randomUUID();
         Account account = new Account();
         account.setId(accountId);
-        account.setOwnerGuid(ownerId);
+        account.setOwnerGuid(ownerGuid);
         account.setBalance(100.50);
 
-        HashMap<UUID, Account> map = new HashMap<>();
-        map.put(accountId, account);
+        List<Account> accountList = new ArrayList<>();
+        accountList.add(account);
 
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(map);
+        Mockito.when(accountRepository.findById(accountId).get()).thenReturn(account);
 
         // Act & Assert
         mockMvc.perform(get("/api/accounts/" + accountId))
@@ -87,7 +85,7 @@ class AccountControllerTest {
     void shouldReturn404WhenAccountDoesNotExist() throws Exception {
         // Arrange
         UUID missingAccountId = UUID.randomUUID();
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(new HashMap<>());
+        Mockito.when(accountRepository.findById(missingAccountId)).thenReturn(null);
 
         // Act & Assert
         mockMvc.perform(get("/api/accounts/" + missingAccountId))
@@ -98,17 +96,17 @@ class AccountControllerTest {
     void shouldResetAccountWhenInquirerIsAdmin() throws Exception {
         // Arrange
         UUID accountId = UUID.randomUUID();
-        UUID ownerId = UUID.randomUUID();
+        UUID ownerGuid = UUID.randomUUID();
         UUID adminId = UUID.randomUUID();
         Account account = new Account();
         account.setId(accountId);
-        account.setOwnerGuid(ownerId);
+        account.setOwnerGuid(ownerGuid);
         account.setBalance(500.0);
 
-        HashMap<UUID, Account> accountMap = new HashMap<>();
-        accountMap.put(accountId, account);
+        List<Account> accountList = new ArrayList<>();
+        accountList.add(account);
 
-        HashMap<UUID, User> userMap = new HashMap<>();
+        List<User> userList = new ArrayList<>();
         // Assuming your User object can handle an admin setup or your UserController mock checks this
         List<String> roles = new ArrayList<>();
         roles.add("admin");
@@ -117,10 +115,10 @@ class AccountControllerTest {
         adminUser.setName("admin_user");
         adminUser.setRoles(roles);
 
-        userMap.put(adminId, adminUser);
+        userList.add(adminUser);
 
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(accountMap);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        Mockito.when(accountRepository.findById(accountId).get()).thenReturn(account);
+        Mockito.when(userRepository.findById(adminId).get()).thenReturn(adminUser);
 
         // Act & Assert
         mockMvc.perform(put("/api/accounts/"+ accountId + "/reset")
@@ -142,17 +140,17 @@ class AccountControllerTest {
         adminUser.setName("admin_user");
         adminUser.setRoles(roles);
 
-        HashMap<UUID, User> userMap = new HashMap<>();
-        userMap.put(adminId, adminUser);
+        List<User> userList = new ArrayList<>();
+        userList.add(adminUser);
 
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(new HashMap<>());
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        Mockito.when(accountRepository.findById(missingAccountId).get()).thenReturn(null);
+        Mockito.when(userRepository.findById(adminId).get()).thenReturn(adminUser);
 
         mockMvc.perform(put("/api/accounts/" + missingAccountId + "/reset")
                         .param("inquirerid", adminId.toString()))
                 .andExpect(status().isNotFound());
 
-        Mockito.verify(accountStorageService, Mockito.never()).saveAccounts(Mockito.any());
+        Mockito.verify(accountRepository, Mockito.never()).save(Mockito.any());
     }
 
 
@@ -160,12 +158,17 @@ class AccountControllerTest {
     void shouldReturn403WhenInquirerIsNotAdmin() throws Exception {
         String regularUserId = "55c1dc52-fe0d-4447-a53a-5566f60c5113";
         String accountId = "c46b72b7-0382-4a73-b92e-be7580029e56";
+        Account account = new Account();
+        account.setId(UUID.fromString(accountId));
+        account.setOwnerGuid(UUID.randomUUID());
+        account.setBalance(15);
 
-        HashMap<UUID, User> userMap = new HashMap<>();
+        List<User> userList = new ArrayList<>();
         User regularUser = UserControllerTest.produceUser(regularUserId, "alice", "user");
-        userMap.put(UUID.fromString(regularUserId), regularUser);
+        userList.add(regularUser);
 
-        Mockito.when(userStorageService.loadUsers()).thenReturn(userMap);
+        Mockito.when(accountRepository.findById(UUID.fromString(accountId)).get()).thenReturn(account);
+        Mockito.when(userRepository.findById(UUID.fromString(regularUserId)).get()).thenReturn(regularUser);
 
         // Act & Assert
         mockMvc.perform(put("/api/accounts/" + accountId + "/reset")

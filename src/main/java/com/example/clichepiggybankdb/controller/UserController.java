@@ -70,7 +70,7 @@ public class UserController {
             throw new UserNotFoundException(id);
         }
 
-        Account toBeVerified = accountRepository.findByOwnerId(id).getFirst();
+        Account toBeVerified = accountRepository.findByOwnerGuid(id).getFirst();
         if (toBeVerified != null) {
             if (toBeVerified.getBalance() > 0) {
                 throw new AccountNotEmptyException(toBeVerified.getId());

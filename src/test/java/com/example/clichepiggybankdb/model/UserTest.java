@@ -53,7 +53,8 @@ class UserTest {
 
         // Act - Turn the JSON string back into a Java User object
         User userResult = objectMapper.readValue(inputJson, User.class);
-        String[] roles = {"user"};
+        List<String> roles = new ArrayList<>();
+        roles.add("user");
 
         // Assert
         assertThat(userResult).isNotNull();

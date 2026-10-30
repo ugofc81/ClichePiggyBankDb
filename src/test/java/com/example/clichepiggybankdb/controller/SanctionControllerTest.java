@@ -3,10 +3,11 @@ package com.example.clichepiggybankdb.controller;
 import com.example.clichepiggybankdb.model.Sanction;
 import com.example.clichepiggybankdb.model.SanctionAmount;
 import com.example.clichepiggybankdb.model.User;
-import com.example.clichepiggybankdb.service.AccountStorageService;
-import com.example.clichepiggybankdb.service.SanctionStorageService;
-import com.example.clichepiggybankdb.service.UserStorageService;
+import com.example.clichepiggybankdb.service.AccountRepository;
+import com.example.clichepiggybankdb.service.SanctionRepository;
+import com.example.clichepiggybankdb.service.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -15,12 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -31,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(SanctionController.class)
+@WebMvcTest(SanctionController.class)
 class SanctionControllerTest {
 
     @Autowired
@@ -41,13 +40,13 @@ class SanctionControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private SanctionStorageService sanctionStorageService;
+    private SanctionRepository sanctionRepository;
 
     @MockitoBean
-    private UserStorageService userStorageService;
+    private UserRepository userRepository;
 
     @MockitoBean
-    private AccountStorageService accountStorageService;
+    private AccountRepository accountRepository;
 
     @Test
     void shouldCreateSanctionAndIndirectlyCreateAndChargeAccount() throws Exception {
@@ -58,13 +57,13 @@ class SanctionControllerTest {
         User reporter = UserControllerTest.produceUser(inquirerId, "alice", "user");
         User receiver = UserControllerTest.produceUser(receiverId, "bob", "user");
 
-        HashMap<UUID, User> mockUserMap = new HashMap<>();
-        mockUserMap.put(UUID.fromString(inquirerId), reporter);
-        mockUserMap.put(UUID.fromString(receiverId), receiver);
+        List<User> mockUserList = new ArrayList<>();
+        mockUserList.add(reporter);
+        mockUserList.add(receiver);
 
-        Mockito.when(userStorageService.loadUsers()).thenReturn(mockUserMap);
-        Mockito.when(accountStorageService.loadAccounts()).thenReturn(new HashMap<>()); // Triggers account creation branch!
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(new HashMap<>());
+        Mockito.when(userRepository.findAll()).thenReturn(mockUserList);
+        Mockito.when(accountRepository.findAll()).thenReturn(new ArrayList<>());
+        Mockito.when(sanctionRepository.findAll()).thenReturn(new ArrayList<>());
 
         Sanction incomingSanction = new Sanction();
         incomingSanction.setId(sanctionId);
@@ -84,10 +83,6 @@ class SanctionControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.reporter.name").value("alice"))
                 .andExpect(jsonPath("$.receiver.name").value("bob"));
-
-        // 5. Verification: Check that AccountController logic successfully instructed account data to be saved!
-        Mockito.verify(accountStorageService, Mockito.atLeastOnce()).saveAccounts(any(HashMap.class));
-        Mockito.verify(sanctionStorageService, Mockito.times(1)).saveSanctions(any(HashMap.class));
     }
 
     @Test
@@ -104,9 +99,9 @@ class SanctionControllerTest {
         sanction.setDatetime(new Date());
         sanction.setLikesNumber(0);
 
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
-        sanctions.put(sanctionId, sanction);
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        List<Sanction> sanctions = new ArrayList<>();
+        sanctions.add(sanction);
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctions);
 
         mockMvc.perform(get("/api/sanctions/{id}", sanctionId))
                 .andDo(print())
@@ -118,7 +113,7 @@ class SanctionControllerTest {
     @Test
     void shouldReturnNotFoundWhenSanctionDoesNotExist() throws Exception {
         UUID missingId = UUID.randomUUID();
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(new HashMap<>());
+        Mockito.when(sanctionRepository.findById(missingId)).thenReturn(null);
 
         mockMvc.perform(get("/api/sanctions/{id}", missingId))
                 .andDo(print())
@@ -131,10 +126,10 @@ class SanctionControllerTest {
         User inquirer = configureInquirer();
         Sanction firstSanction = produceSanction(UUID.randomUUID(), 1L, 2);
         Sanction secondSanction = produceSanction(UUID.randomUUID(), 2L, 5);
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
-        sanctions.put(firstSanction.getId(), firstSanction);
-        sanctions.put(secondSanction.getId(), secondSanction);
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        List<Sanction> sanctionsList = new ArrayList<>();
+        sanctionsList.add(firstSanction);
+        sanctionsList.add(secondSanction);
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctionsList);
 
         mockMvc.perform(get("/api/sanctions").param("inquirerid", inquirer.getId().toString()))
                 .andExpect(status().isOk())
@@ -148,7 +143,7 @@ class SanctionControllerTest {
     @Test
     void shouldReturnNotFoundWhenInquirerDoesNotExist() throws Exception {
         UUID missingInquirerId = UUID.randomUUID();
-        Mockito.when(userStorageService.loadUsers()).thenReturn(new HashMap<>());
+        Mockito.when(userRepository.findById(missingInquirerId)).thenReturn(null);
 
         mockMvc.perform(get("/api/sanctions").param("inquirerid", missingInquirerId.toString()))
                 .andDo(print())
@@ -159,16 +154,16 @@ class SanctionControllerTest {
     @Test
     void shouldGetLastTenSanctionsInDescendingDateOrder() throws Exception {
         User inquirer = configureInquirer();
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
+        List<Sanction> sanctionList = new ArrayList<>();
         List<String> expectedIds = new ArrayList<>();
         for (int index = 0; index < 12; index++) {
             Sanction sanction = produceSanction(UUID.randomUUID(), index, index);
-            sanctions.put(sanction.getId(), sanction);
+            sanctionList.add(sanction);
             if (index >= 2) {
-                expectedIds.add(0, sanction.getId().toString());
+                expectedIds.addFirst(sanction.getId().toString());
             }
         }
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctionList);
 
         mockMvc.perform(get("/api/sanctions/latest").param("inquirerid", inquirer.getId().toString()))
                 .andExpect(status().isOk())
@@ -183,11 +178,8 @@ class SanctionControllerTest {
         Sanction secondOldest = produceSanction(UUID.randomUUID(), 2L, 10);
         Sanction secondNewest = produceSanction(UUID.randomUUID(), 3L, 40);
         Sanction newest = produceSanction(UUID.randomUUID(), 4L, 20);
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
-        for (Sanction sanction : List.of(oldest, secondOldest, secondNewest, newest)) {
-            sanctions.put(sanction.getId(), sanction);
-        }
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        List<Sanction> sanctions = new ArrayList<>(List.of(oldest, secondOldest, secondNewest, newest));
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctions);
 
         mockMvc.perform(get("/api/sanctions/paginated")
                         .param("inquirerid", inquirer.getId().toString())
@@ -220,16 +212,16 @@ class SanctionControllerTest {
     @Test
     void shouldUseDefaultPaginationAndSortByNewestFirst() throws Exception {
         User inquirer = configureInquirer();
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
+        List<Sanction> sanctionsList = new ArrayList<>();
         List<String> expectedIds = new ArrayList<>();
         for (int index = 0; index < 12; index++) {
             Sanction sanction = produceSanction(UUID.randomUUID(), index, index);
-            sanctions.put(sanction.getId(), sanction);
+            sanctionsList.add(sanction);
             if (index >= 2) {
-                expectedIds.add(0, sanction.getId().toString());
+                expectedIds.addFirst(sanction.getId().toString());
             }
         }
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctionsList);
 
         mockMvc.perform(get("/api/sanctions/paginated")
                         .param("inquirerid", inquirer.getId().toString()))
@@ -244,11 +236,11 @@ class SanctionControllerTest {
         Sanction leastLiked = produceSanction(UUID.randomUUID(), 1L, 1);
         Sanction mostLiked = produceSanction(UUID.randomUUID(), 2L, 9);
         Sanction middleLiked = produceSanction(UUID.randomUUID(), 3L, 4);
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
-        sanctions.put(leastLiked.getId(), leastLiked);
-        sanctions.put(mostLiked.getId(), mostLiked);
-        sanctions.put(middleLiked.getId(), middleLiked);
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        List<Sanction> sanctionsList = new ArrayList<>();
+        sanctionsList.add(leastLiked);
+        sanctionsList.add(mostLiked);
+        sanctionsList.add(middleLiked);
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctionsList);
 
         mockMvc.perform(get("/api/sanctions/best").param("inquirerid", inquirer.getId().toString()))
                 .andExpect(status().isOk())
@@ -264,9 +256,9 @@ class SanctionControllerTest {
         User inquirer = configureInquirer();
         UUID otherUserId = UUID.randomUUID();
         Sanction sanction = produceSanction(UUID.randomUUID(), 1L, 1);
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
-        sanctions.put(sanction.getId(), sanction);
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        List<Sanction> sanctions = new ArrayList<>();
+        sanctions.add(sanction);
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctions);
 
         mockMvc.perform(put("/api/sanctions/{id}/like", sanction.getId())
                         .param("inquirerid", inquirer.getId().toString()))
@@ -277,14 +269,14 @@ class SanctionControllerTest {
                         otherUserId.toString()
                 )));
 
-        Mockito.verify(sanctionStorageService).saveSanctions(sanctions);
+        Mockito.verify(sanctionRepository).save(sanction);
     }
 
     @Test
     void shouldReturnNotFoundWhenLikingSanctionDoesNotExist() throws Exception {
         User inquirer = configureInquirer();
         UUID missingId = UUID.randomUUID();
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(new HashMap<>());
+        Mockito.when(sanctionRepository.findAll()).thenReturn(new ArrayList<>());
 
         mockMvc.perform(put("/api/sanctions/{id}/like", missingId)
                         .param("inquirerid", inquirer.getId().toString()))
@@ -298,9 +290,9 @@ class SanctionControllerTest {
         User inquirer = configureInquirer();
         UUID otherUserId = UUID.randomUUID();
         Sanction sanction = produceSanction(UUID.randomUUID(), 1L, 2);
-        HashMap<UUID, Sanction> sanctions = new HashMap<>();
-        sanctions.put(sanction.getId(), sanction);
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(sanctions);
+        List<Sanction> sanctions = new ArrayList<>();
+        sanctions.add(sanction);
+        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctions);
 
         mockMvc.perform(put("/api/sanctions/{id}/unlike", sanction.getId())
                         .param("inquirerid", inquirer.getId().toString()))
@@ -308,14 +300,14 @@ class SanctionControllerTest {
                 .andExpect(jsonPath("$.likes").value(1))
                 .andExpect(jsonPath("$.likedBy", contains(otherUserId.toString())));
 
-        Mockito.verify(sanctionStorageService).saveSanctions(sanctions);
+        Mockito.verify(sanctionRepository).save(sanction);
     }
 
     @Test
     void shouldReturnNotFoundWhenUnlikingSanctionDoesNotExist() throws Exception {
         User inquirer = configureInquirer();
         UUID missingId = UUID.randomUUID();
-        Mockito.when(sanctionStorageService.loadSanctions()).thenReturn(new HashMap<>());
+        Mockito.when(sanctionRepository.findAll()).thenReturn(new ArrayList<>());
 
         mockMvc.perform(put("/api/sanctions/{id}/unlike", missingId)
                         .param("inquirerid", inquirer.getId().toString()))
@@ -330,9 +322,9 @@ class SanctionControllerTest {
                 "alice",
                 "user"
         );
-        HashMap<UUID, User> users = new HashMap<>();
-        users.put(inquirer.getId(), inquirer);
-        Mockito.when(userStorageService.loadUsers()).thenReturn(users);
+        List<User> users = new ArrayList<>();
+        users.add(inquirer);
+        Mockito.when(userRepository.findAll()).thenReturn(users);
         return inquirer;
     }
 
