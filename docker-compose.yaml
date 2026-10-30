@@ -1,0 +1,26 @@
+version: '3.8'
+name: cliche-piggy-bank
+
+services:
+  # 1. Your Containerized Spring Boot App
+  my-springboot-backend:
+    build: .                 # Tells Docker to look for the Dockerfile in the current directory
+    ports:
+      - "9092:9092"          # Keeps port 9092 accessible from your Linux machine
+    volumes:
+      - ./users.json:/app/users.json
+      - ./accounts.json:/app/accounts.json
+      - ./sanctions.json:/app/sanctions.json
+    restart: unless-stopped
+
+  # 2. Local Budibase Platform
+  budibase:
+    image: budibase/budibase:latest
+    ports:
+      - "10000:80"           # Accessible via http://localhost:10000
+    environment:
+      - ALLOW_LOCAL_IPS=true # Bypasses internal URL restriction safety filters
+      - BLACKLIST_IPS=          # CRUCIAL: Blank value clears the security blocker
+    restart: unless-stopped
+    depends_on:
+      - my-springboot-backend

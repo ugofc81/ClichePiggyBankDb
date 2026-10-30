@@ -1,0 +1,571 @@
+{
+  "info": {
+    "_postman_id": "86c3431c-b59e-4da2-9a39-9c0487f109d3",
+    "name": "ClichePiggyBank",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "3460027"
+  },
+  "item": [
+    {
+      "name": "account reset",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const cookieJar = pm.cookies.jar();\r",
+              "\r",
+              "// Define the mandatory cookie string with the .google.com domain\r",
+              "const consentCookie = \"CONSENT=PENDING+999; Domain=.google.com; Path=/; Secure; SameSite=None\";\r",
+              "\r",
+              "cookieJar.set(\"https://google.com\", \"CONSENT\", consentCookie, function (error) {\r",
+              "    if (error) {\r",
+              "        console.error(\"Injection failed! Double-check your Cookie Allowlist:\", error);\r",
+              "    } else {\r",
+              "        console.log(\"Cookie successfully set!\");\r",
+              "    }\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:9092/api/accounts/0a1c29ba-ae19-4fe4-b9ea-7732908df56b/reset?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "accounts",
+            "0a1c29ba-ae19-4fe4-b9ea-7732908df56b",
+            "reset"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "01ed6752-1665-41e1-a120-ca25c42a7562"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "accounts list",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const cookieJar = pm.cookies.jar();\r",
+              "\r",
+              "// Define the mandatory cookie string with the .google.com domain\r",
+              "const consentCookie = \"CONSENT=PENDING+999; Domain=.google.com; Path=/; Secure; SameSite=None\";\r",
+              "\r",
+              "cookieJar.set(\"https://google.com\", \"CONSENT\", consentCookie, function (error) {\r",
+              "    if (error) {\r",
+              "        console.error(\"Injection failed! Double-check your Cookie Allowlist:\", error);\r",
+              "    } else {\r",
+              "        console.log(\"Cookie successfully set!\");\r",
+              "    }\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:9092/api/accounts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "accounts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanction best",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/best",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions",
+            "best"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanction latest",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/latest?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions",
+            "latest"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "fba592ba-36c3-4479-ba38-bcaeceff9ff0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanction latest paginated",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/paginated?sort=datetime&order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions",
+            "paginated"
+          ],
+          "query": [
+            {
+              "key": "sort",
+              "value": "datetime"
+            },
+            {
+              "key": "order",
+              "value": "desc"
+            },
+            {
+              "key": "size",
+              "value": "100"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "inquirerid",
+              "value": "fba592ba-36c3-4479-ba38-bcaeceff9ff0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanction best",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/best?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions",
+            "best"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "fba592ba-36c3-4479-ba38-bcaeceff9ff0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanction best paginated",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/paginated?sort=likes&order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions",
+            "paginated"
+          ],
+          "query": [
+            {
+              "key": "sort",
+              "value": "likes"
+            },
+            {
+              "key": "order",
+              "value": "desc"
+            },
+            {
+              "key": "size",
+              "value": "100"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "inquirerid",
+              "value": "fba592ba-36c3-4479-ba38-bcaeceff9ff0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanction create",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"receiver\": {\n        \"id\": \"4c4fda50-cec4-404d-8824-474a1c1163f2\"\n    },\n    \"reason\": \"Große Strafe\",\n    \"amount\": \"HIGH\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "fba592ba-36c3-4479-ba38-bcaeceff9ff0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanctions get",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"reporter\": {\n        \"id\": \"4c4fda50-cec4-404d-8824-474a1c1163f2\"\n    },\n    \"receiver\": {\n        \"id\": \"fba592ba-36c3-4479-ba38-bcaeceff9ff0\"\n    },\n    \"reason\": \n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/paginated?order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions",
+            "paginated"
+          ],
+          "query": [
+            {
+              "key": "order",
+              "value": "desc"
+            },
+            {
+              "key": "size",
+              "value": "100"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "inquirerid",
+              "value": "fba592ba-36c3-4479-ba38-bcaeceff9ff0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "sanction like",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"reporter\": {\n        \"id\": \"4c4fda50-cec4-404d-8824-474a1c1163f2\"\n    },\n    \"receiver\": {\n        \"id\": \"fba592ba-36c3-4479-ba38-bcaeceff9ff0\"\n    },\n    \"reason\": \n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/ecff1990-392c-4fd6-8f70-1cb14cf9ea7a/like?inquirerid=27ee6c9a-ce75-4515-a4a8-27e755efe0e2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "sanctions",
+            "ecff1990-392c-4fd6-8f70-1cb14cf9ea7a",
+            "like"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "27ee6c9a-ce75-4515-a4a8-27e755efe0e2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "users get",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:9092/api/users",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "user create",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "    {\n        \"id\": \"01ed6752-1665-41e1-a120-ca25c42a7562\",\n        \"name\": \"Colin\",\n        \"roles\": [\n            \"user\"\n        ]\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/users?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "01ed6752-1665-41e1-a120-ca25c42a7562"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "user delete",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "    {\n        \"id\": \"01ed6752-1665-41e1-a120-ca25c42a7562\",\n        \"name\": \"Colin\",\n        \"roles\": [\n            \"user\"\n        ]\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:9092/api/users/4d2903b6-e6c8-4e53-ae11-8f760b1827ea?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9092",
+          "path": [
+            "api",
+            "users",
+            "4d2903b6-e6c8-4e53-ae11-8f760b1827ea"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "01ed6752-1665-41e1-a120-ca25c42a7562"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
