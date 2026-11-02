@@ -2,6 +2,7 @@ package com.example.clichepiggybankdb.controller;
 
 import com.example.clichepiggybankdb.controller.exceptions.AccountNotEmptyException;
 import com.example.clichepiggybankdb.controller.exceptions.ForbiddenException;
+import com.example.clichepiggybankdb.controller.exceptions.InquirerNotFoundException;
 import com.example.clichepiggybankdb.controller.exceptions.UserNotFoundException;
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.Role;
@@ -34,13 +35,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User newUser, @RequestParam("inquirerid") UUID inquirerId) {
-        if (userRepository.existsById(inquirerId)) {
-            userRepository.findById(inquirerId);
-            if (!isAdmin(rolesRepository.findByUserGuid(inquirerId))) {
-                throw new ForbiddenException(inquirerId);
-            }
-        } else {
-            throw new UserNotFoundException(inquirerId);
+        if (!userRepository.existsById(inquirerId)) {
+            throw new InquirerNotFoundException(inquirerId);
+        }
+        if (!isAdmin(rolesRepository.findByUserGuid(inquirerId))) {
+            throw new ForbiddenException(inquirerId);
         }
 
         User u = userRepository.save(newUser);
@@ -57,13 +56,11 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<User> deleteUser(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        if (userRepository.existsById(inquirerId)) {
-            userRepository.findById(inquirerId);
-            if (!isAdmin(rolesRepository.findByUserGuid(inquirerId))) {
-                throw new ForbiddenException(inquirerId);
-            }
-        } else {
-            throw new UserNotFoundException(inquirerId);
+        if (!userRepository.existsById(inquirerId)) {
+            throw new InquirerNotFoundException(inquirerId);
+        }
+        if (!isAdmin(rolesRepository.findByUserGuid(inquirerId))) {
+            throw new ForbiddenException(inquirerId);
         }
 
         if (!userRepository.existsById(id)) {
@@ -89,8 +86,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable UUID id) {
-        ;
-        if (userRepository.findById(id).isEmpty()) {
+        if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
         }
         return ResponseEntity.ok(userRepository.findById(id).get());

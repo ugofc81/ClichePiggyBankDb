@@ -1,11 +1,10 @@
 package com.example.clichepiggybankdb.controller;
 
+import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.Sanction;
 import com.example.clichepiggybankdb.model.SanctionAmount;
 import com.example.clichepiggybankdb.model.User;
-import com.example.clichepiggybankdb.service.AccountRepository;
-import com.example.clichepiggybankdb.service.SanctionRepository;
-import com.example.clichepiggybankdb.service.UserRepository;
+import com.example.clichepiggybankdb.service.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.mockito.Mockito;
@@ -15,10 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.Date;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -48,8 +44,14 @@ class SanctionControllerTest {
     @MockitoBean
     private AccountRepository accountRepository;
 
+    @MockitoBean
+    private RoleRepository roleRepository;
+
+    @MockitoBean
+    private LikeRepository likeRepository;
+
     @Test
-    void shouldCreateSanctionAndIndirectlyCreateAndChargeAccount() throws Exception {
+    void shouldCreateSanctionAndCreateAndChargeAccount() throws Exception {
         String inquirerId = "990b0301-9262-4048-a4d6-4f7ad19eeb46";
         String receiverId = "c0a6d648-d769-4ebb-a0f0-7d44a0b0462e";
         UUID sanctionId = UUID.randomUUID();
@@ -95,30 +97,55 @@ class SanctionControllerTest {
         sanction.setReporterGuid(reporter.getId());
         sanction.setReceiverGuid(receiver.getId());
         sanction.setAmount(SanctionAmount.HIGH);
-        sanction.setReason("late payment");
+        sanction.setReason("So to say");
         sanction.setDatetime(new Date());
         sanction.setLikesNumber(0);
 
-        List<Sanction> sanctions = new ArrayList<>();
-        sanctions.add(sanction);
-        Mockito.when(sanctionRepository.findAll()).thenReturn(sanctions);
+        List<Role> roles = new ArrayList<>();
+        Role userRole = new Role();
+        userRole.setUserGuid(reporter.getId());
+        userRole.setRole("user");
+        roles.add(userRole);
+        Mockito.when(roleRepository.findByUserGuid(reporter.getId())).thenReturn(roles);
+        Mockito.when(userRepository.existsById(reporter.getId())).thenReturn(Boolean.TRUE);
 
-        mockMvc.perform(get("/api/sanctions/{id}", sanctionId))
+        Mockito.when(sanctionRepository.findById(sanctionId)).thenReturn(Optional.of(sanction));
+
+        mockMvc.perform(get("/api/sanctions/{id}", sanctionId)
+                        .param("inquirerid", reporter.getId().toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(sanctionId.toString()))
-                .andExpect(jsonPath("$.receiver.name").value("bob"));
+                .andExpect(jsonPath("$.receiverGuid").value(receiver.getId().toString()));
     }
 
     @Test
     void shouldReturnNotFoundWhenSanctionDoesNotExist() throws Exception {
         UUID missingId = UUID.randomUUID();
-        Mockito.when(sanctionRepository.findById(missingId)).thenReturn(null);
+        Mockito.when(sanctionRepository.existsById(missingId)).thenReturn(Boolean.FALSE);
 
         mockMvc.perform(get("/api/sanctions/{id}", missingId))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Sanction with id '" + missingId + "' was not found."));
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenInquirerNotUser() throws Exception {
+        User inquirer = configureInquirer();
+        List<Role> roles = new ArrayList<>();
+        Role userRole = new Role();
+        userRole.setUserGuid(inquirer.getId());
+        userRole.setRole("admin");
+        roles.add(userRole);
+        Mockito.when(userRepository.existsById(inquirer.getId())).thenReturn(Boolean.TRUE);
+        Mockito.when(roleRepository.findByUserGuid(inquirer.getId())).thenReturn(roles);
+
+        mockMvc.perform(get("/api/sanctions")
+                        .param("inquirerid", inquirer.getId().toString()))
+                .andDo(print())
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Inquirer with id '" + inquirer.getId() + "' did not have enough rights to perform the request."));
     }
 
     @Test
@@ -129,6 +156,13 @@ class SanctionControllerTest {
         List<Sanction> sanctionsList = new ArrayList<>();
         sanctionsList.add(firstSanction);
         sanctionsList.add(secondSanction);
+        List<Role> roles = new ArrayList<>();
+        Role userRole = new Role();
+        userRole.setUserGuid(inquirer.getId());
+        userRole.setRole("user");
+        roles.add(userRole);
+        Mockito.when(roleRepository.findByUserGuid(inquirer.getId())).thenReturn(roles);
+        Mockito.when(userRepository.existsById(inquirer.getId())).thenReturn(Boolean.TRUE);
         Mockito.when(sanctionRepository.findAll()).thenReturn(sanctionsList);
 
         mockMvc.perform(get("/api/sanctions").param("inquirerid", inquirer.getId().toString()))
@@ -143,7 +177,7 @@ class SanctionControllerTest {
     @Test
     void shouldReturnNotFoundWhenInquirerDoesNotExist() throws Exception {
         UUID missingInquirerId = UUID.randomUUID();
-        Mockito.when(userRepository.findById(missingInquirerId)).thenReturn(null);
+        Mockito.when(userRepository.existsById(missingInquirerId)).thenReturn(Boolean.FALSE);
 
         mockMvc.perform(get("/api/sanctions").param("inquirerid", missingInquirerId.toString()))
                 .andDo(print())
@@ -276,7 +310,7 @@ class SanctionControllerTest {
     void shouldReturnNotFoundWhenLikingSanctionDoesNotExist() throws Exception {
         User inquirer = configureInquirer();
         UUID missingId = UUID.randomUUID();
-        Mockito.when(sanctionRepository.findAll()).thenReturn(new ArrayList<>());
+        Mockito.when(sanctionRepository.existsById(missingId)).thenReturn(Boolean.FALSE);
 
         mockMvc.perform(put("/api/sanctions/{id}/like", missingId)
                         .param("inquirerid", inquirer.getId().toString()))

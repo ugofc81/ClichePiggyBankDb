@@ -37,41 +37,39 @@ public class AccountController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Account> getAccount(@PathVariable UUID id) {
-        if(accountRepository.findById(id).isEmpty()) {
-            throw new AccountNotFoundException(id);
-        }
-        return ResponseEntity.ok(accountRepository.findById(id).get());
+        return ResponseEntity.ok(accountRepository
+                .findById(id)
+                .orElseThrow(() -> new AccountNotFoundException(id)));
     }
 
-    public ResponseEntity<Account> updateAccount(@PathVariable UUID id, @RequestBody Account updatedAccount) {
-        if(accountRepository.findById(id).isEmpty()) {
-            throw new AccountNotFoundException(id);
-        }
-        return ResponseEntity.ok(accountRepository.save(updatedAccount));
-    }
-
-    public ResponseEntity<Account> deleteAccount(@PathVariable UUID id) {
-        if(accountRepository.findById(id).isEmpty()) {
-            throw new AccountNotFoundException(id);
-        }
-        Account removed = accountRepository.findById(id).get();
-        accountRepository.deleteById(id);
-        return ResponseEntity.ok(removed);
-    }
+//    public ResponseEntity<Account> updateAccount(@PathVariable UUID id, @RequestBody Account updatedAccount) {
+//        if(!accountRepository.existsById(id)) {
+//            throw new AccountNotFoundException(id);
+//        }
+//        return ResponseEntity.ok(accountRepository.save(updatedAccount));
+//    }
+//
+//    public ResponseEntity<Account> deleteAccount(@PathVariable UUID id) {
+//        Account removed = accountRepository
+//                .findById(id)
+//                .orElseThrow(() -> new AccountNotFoundException(id));
+//        accountRepository.deleteById(id);
+//        return ResponseEntity.ok(removed);
+//    }
 
     @PutMapping("/{id}/reset")
     public ResponseEntity<Account> resetAccount(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        if(accountRepository.findById(id).isEmpty()) {
-            throw new AccountNotFoundException(id);
-        }
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        if(!userRepository.existsById(inquirerId)) {
             throw new UserNotFoundException(id);
         }
         if (!UserController.isAdmin(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        Account current = accountRepository.findById(id).get();
+        Account current = accountRepository
+                .findById(id)
+                .orElseThrow(() -> new AccountNotFoundException(id));
         current.setBalance(0);
         return ResponseEntity.ok(accountRepository.save(current));
+
     }
 }
