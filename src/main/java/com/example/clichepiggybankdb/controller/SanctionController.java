@@ -37,7 +37,7 @@ public class SanctionController {
 
     @GetMapping
     public ResponseEntity<List<Sanction>> getAllSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
@@ -63,7 +63,7 @@ public class SanctionController {
 
     @GetMapping("/best")
     public ResponseEntity<List<Sanction>> getBestSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
@@ -81,7 +81,7 @@ public class SanctionController {
             @RequestParam(name = "size", defaultValue = "10") Integer size,
             @RequestParam(name = "page", defaultValue = "1") Integer page,
             @RequestParam("inquirerid") UUID inquirerId) {
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
@@ -110,10 +110,10 @@ public class SanctionController {
     public ResponseEntity<Sanction> createSanction(@RequestBody Sanction newSanction, @RequestParam("inquirerid") UUID inquirerId) {
         newSanction.setDatetime(new Date());
 
-        if(userRepository.findById(newSanction.getReceiverGuid()).isEmpty()) {
+        if(!userRepository.existsById(newSanction.getReceiverGuid())) {
             throw new UserNotFoundException(newSanction.getReceiverGuid());
         }
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if (!UserController.isAdmin(roleRepository.findByUserGuid(inquirerId)) && !UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
@@ -136,19 +136,23 @@ public class SanctionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Sanction> getSanction(@PathVariable UUID id) {
-        if(!sanctionRepository.existsById(id)) {
-            throw new SanctionNotFoundException(id);
+    public ResponseEntity<Sanction> getSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
+        if(!userRepository.existsById(inquirerId)) {
+            throw new InquirerNotFoundException(inquirerId);
         }
-        return ResponseEntity.ok(sanctionRepository.findById(id).get());
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
+            throw new ForbiddenException(inquirerId);
+        }
+        return ResponseEntity.ok(sanctionRepository.findById(id)
+                .orElseThrow(() -> new SanctionNotFoundException(id)));
     }
 
     @GetMapping("/{id}/isLiked")
     public ResponseEntity<Boolean> isLiked(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        if(sanctionRepository.findById(id).isEmpty()) {
+        if(!sanctionRepository.existsById(id)) {
             throw new SanctionNotFoundException(id);
         }
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isEmpty()) {
@@ -159,10 +163,9 @@ public class SanctionController {
 
     @PutMapping("/{id}/like")
     public ResponseEntity<Sanction> likeSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        if(sanctionRepository.findById(id).isEmpty()) {
-            throw new SanctionNotFoundException(id);
-        }
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        Sanction updatableSanction = sanctionRepository.findById(id)
+                .orElseThrow(() -> new SanctionNotFoundException(id));
+        if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
@@ -174,7 +177,6 @@ public class SanctionController {
         Like newLike = new Like();
         newLike.setLikedGuid(id);
         newLike.setLikerGuid(inquirerId);
-        Sanction updatableSanction = sanctionRepository.findById(id).get();
         updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() + 1);
         sanctionRepository.save(updatableSanction);
         likeRepository.save(newLike);
@@ -183,10 +185,9 @@ public class SanctionController {
 
     @PutMapping("/{id}/unlike")
     public ResponseEntity<Sanction> unlikeSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        if(sanctionRepository.findById(id).isEmpty()) {
-            throw new SanctionNotFoundException(id);
-        }
-        if(userRepository.findById(inquirerId).isEmpty()) {
+        Sanction updatableSanction = sanctionRepository.findById(id)
+                .orElseThrow(() -> new SanctionNotFoundException(id));
+        if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
@@ -196,7 +197,6 @@ public class SanctionController {
             throw new LikeNotFoundException(id, inquirerId);
         }
         Like deletableLike = likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).get();
-        Sanction updatableSanction = sanctionRepository.findById(id).get();
         updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() - 1);
         sanctionRepository.save(updatableSanction);
         likeRepository.delete(deletableLike);

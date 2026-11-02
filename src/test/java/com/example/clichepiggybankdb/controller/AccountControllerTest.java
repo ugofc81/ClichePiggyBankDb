@@ -1,6 +1,7 @@
 package com.example.clichepiggybankdb.controller;
 
 import com.example.clichepiggybankdb.model.Account;
+import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.User;
 import com.example.clichepiggybankdb.service.*;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,6 +35,9 @@ class AccountControllerTest {
 
     @MockitoBean
     private AccountRepository accountRepository;
+
+    @MockitoBean
+    private RoleRepository roleRepository;
 
     public static Account produceAccount(final String accountGuidString, final String ownerGuidString, final double balance) {
         UUID accountGuid = UUID.fromString(accountGuidString);
@@ -69,27 +74,14 @@ class AccountControllerTest {
         account.setOwnerGuid(ownerGuid);
         account.setBalance(100.50);
 
-        List<Account> accountList = new ArrayList<>();
-        accountList.add(account);
-
-        Mockito.when(accountRepository.findById(accountId).get()).thenReturn(account);
+        Mockito.when(accountRepository.existsById(accountId)).thenReturn(Boolean.TRUE);
+        Mockito.when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
 
         // Act & Assert
         mockMvc.perform(get("/api/accounts/" + accountId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(accountId.toString()))
                 .andExpect(jsonPath("$.balance").value(100.50));
-    }
-
-    @Test
-    void shouldReturn404WhenAccountDoesNotExist() throws Exception {
-        // Arrange
-        UUID missingAccountId = UUID.randomUUID();
-        Mockito.when(accountRepository.findById(missingAccountId)).thenReturn(null);
-
-        // Act & Assert
-        mockMvc.perform(get("/api/accounts/" + missingAccountId))
-                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -102,23 +94,26 @@ class AccountControllerTest {
         account.setId(accountId);
         account.setOwnerGuid(ownerGuid);
         account.setBalance(500.0);
+        Account accountResetted = new Account();
+        accountResetted.setId(accountId);
+        accountResetted.setOwnerGuid(ownerGuid);
+        accountResetted.setBalance(0);
 
-        List<Account> accountList = new ArrayList<>();
-        accountList.add(account);
-
-        List<User> userList = new ArrayList<>();
         // Assuming your User object can handle an admin setup or your UserController mock checks this
-        List<String> roles = new ArrayList<>();
-        roles.add("admin");
+        List<Role> roles = new ArrayList<>();
+        Role adminRole = new Role();
+        adminRole.setUserGuid(adminId);
+        adminRole.setRole("admin");
+        roles.add(adminRole);
         User adminUser = new User();
         adminUser.setId(adminId);
         adminUser.setName("admin_user");
-        adminUser.setRoles(roles);
 
-        userList.add(adminUser);
+        Mockito.when(userRepository.existsById(adminId)).thenReturn(Boolean.TRUE);
+        Mockito.when(roleRepository.findByUserGuid(adminId)).thenReturn(roles);
+        Mockito.when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+        Mockito.when(accountRepository.save(account)).thenReturn(accountResetted);
 
-        Mockito.when(accountRepository.findById(accountId).get()).thenReturn(account);
-        Mockito.when(userRepository.findById(adminId).get()).thenReturn(adminUser);
 
         // Act & Assert
         mockMvc.perform(put("/api/accounts/"+ accountId + "/reset")
@@ -126,6 +121,18 @@ class AccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(accountId.toString()))
                 .andExpect(jsonPath("$.balance").value(0));
+    }
+
+    @Test
+    void shouldReturn404WhenAccountDoesNotExist() throws Exception {
+        // Arrange
+        UUID missingAccountId = UUID.randomUUID();
+
+        Mockito.when(accountRepository.existsById(missingAccountId)).thenReturn(Boolean.FALSE);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/accounts/" + missingAccountId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -143,8 +150,9 @@ class AccountControllerTest {
         List<User> userList = new ArrayList<>();
         userList.add(adminUser);
 
-        Mockito.when(accountRepository.findById(missingAccountId).get()).thenReturn(null);
-        Mockito.when(userRepository.findById(adminId).get()).thenReturn(adminUser);
+        Account noAccount;
+
+        Mockito.when(accountRepository.existsById(missingAccountId)).thenReturn(Boolean.FALSE);
 
         mockMvc.perform(put("/api/accounts/" + missingAccountId + "/reset")
                         .param("inquirerid", adminId.toString()))
@@ -166,9 +174,16 @@ class AccountControllerTest {
         List<User> userList = new ArrayList<>();
         User regularUser = UserControllerTest.produceUser(regularUserId, "alice", "user");
         userList.add(regularUser);
+        Role role = new Role();
+        role.setUserGuid(UUID.fromString(regularUserId));
+        role.setRole("user");
+        List<Role> roleList = new ArrayList<>();
+        roleList.add(role);
 
-        Mockito.when(accountRepository.findById(UUID.fromString(accountId)).get()).thenReturn(account);
-        Mockito.when(userRepository.findById(UUID.fromString(regularUserId)).get()).thenReturn(regularUser);
+        Mockito.when(accountRepository.existsById(UUID.fromString(accountId))).thenReturn(Boolean.TRUE);
+        Mockito.when(userRepository.existsById(UUID.fromString(regularUserId))).thenReturn(Boolean.TRUE);
+        Mockito.when(roleRepository.findByUserGuid(UUID.fromString(regularUserId))).thenReturn(roleList);
+        Mockito.when(userRepository.findById(UUID.fromString(regularUserId))).thenReturn(Optional.of(regularUser));
 
         // Act & Assert
         mockMvc.perform(put("/api/accounts/" + accountId + "/reset")
