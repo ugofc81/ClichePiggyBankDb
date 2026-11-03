@@ -3,8 +3,13 @@ package com.example.clichepiggybankdb.controller;
 import com.example.clichepiggybankdb.controller.exceptions.*;
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.Like;
+import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.Sanction;
 import com.example.clichepiggybankdb.service.*;
+import jakarta.persistence.TypedQuery;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +25,7 @@ public class SanctionController {
     private final RoleRepository roleRepository;
     private final LikeRepository likeRepository;
     private final static int AMOUNT_OF_LAST_SANCTIONS = 10;
+    public final static String LAST_SANCTIONS_QUERY = "SELECT s FROM sanctions s ORDER BY s.datetime DESC";
 
     public SanctionController(
             SanctionRepository sanctionRepository,
@@ -35,76 +41,16 @@ public class SanctionController {
         this.likeRepository = likeRepository;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Sanction>> getAllSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        if(!userRepository.existsById(inquirerId)) {
-            throw new InquirerNotFoundException(inquirerId);
-        }
-        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
-            throw new ForbiddenException(inquirerId);
-        }
-        return ResponseEntity.ok(new ArrayList<>(sanctionRepository.findAll()));
-    }
-
-    @GetMapping("/latest")
-    public ResponseEntity<List<Sanction>> getLastSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        if(userRepository.findById(inquirerId).isEmpty()) {
-            throw new InquirerNotFoundException(inquirerId);
-        }
-        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
-            throw new ForbiddenException(inquirerId);
-        }
-
-        List<Sanction> sanctionList = getAllSanctions(inquirerId).getBody();
-        Collections.sort(sanctionList, Comparator.comparing(Sanction::getDatetime).reversed());
-        int limit = Math.min(sanctionList.size(), AMOUNT_OF_LAST_SANCTIONS);
-        return ResponseEntity.ok(sanctionList.subList(0, limit));
-    }
-
-    @GetMapping("/best")
-    public ResponseEntity<List<Sanction>> getBestSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-        if(!userRepository.existsById(inquirerId)) {
-            throw new InquirerNotFoundException(inquirerId);
-        }
-        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
-            throw new ForbiddenException(inquirerId);
-        }
-        List<Sanction> sanctionList = getAllSanctions(inquirerId).getBody();
-        Collections.sort(sanctionList, Comparator.comparing(Sanction::getLikesNumber).reversed());
-        return ResponseEntity.ok(sanctionList);
-    }
-
-    @GetMapping("/paginated")
-    public ResponseEntity<List<Sanction>> paginateSanctions(
-            @RequestParam(name = "sort", defaultValue = "datetime") String sort,
-            @RequestParam(name = "order", defaultValue = "desc") String order,
-            @RequestParam(name = "size", defaultValue = "10") Integer size,
-            @RequestParam(name = "page", defaultValue = "1") Integer page,
-            @RequestParam("inquirerid") UUID inquirerId) {
-        if(!userRepository.existsById(inquirerId)) {
-            throw new InquirerNotFoundException(inquirerId);
-        }
-        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
-            throw new ForbiddenException(inquirerId);
-        }
-        List<Sanction> sanctionList = getAllSanctions(inquirerId).getBody();
-        Comparator c;
-        switch(sort) {
-            case "likes":
-                c = Comparator.comparing(Sanction::getLikesNumber);
-                break;
-            default:
-                c = Comparator.comparing(Sanction::getDatetime);
-        }
-        switch(order) {
-            case "desc":
-                c = c.reversed();
-                break;
-        }
-        Collections.sort(sanctionList, c);
-        Integer offset = Math.min(Math.max((page-1) * size, 0), sanctionList.size());
-        return ResponseEntity.ok(sanctionList.subList(offset, offset+Math.min(sanctionList.size()-offset, size)));
-    }
+//    @GetMapping("/all")
+//    public ResponseEntity<List<Sanction>> getAllSanctions(@RequestParam("inquirerid") UUID inquirerId) {
+//        if(!userRepository.existsById(inquirerId)) {
+//            throw new InquirerNotFoundException(inquirerId);
+//        }
+//        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
+//            throw new ForbiddenException(inquirerId);
+//        }
+//        return ResponseEntity.ok(new ArrayList<>(sanctionRepository.findAll()));
+//    }
 
     @PostMapping
     public ResponseEntity<Sanction> createSanction(@RequestBody Sanction newSanction, @RequestParam("inquirerid") UUID inquirerId) {
@@ -116,7 +62,10 @@ public class SanctionController {
         if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if (!UserController.isAdmin(roleRepository.findByUserGuid(inquirerId)) && !UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
+
+        List<Role> inquirerRoles = roleRepository.findByUserGuid(inquirerId);
+
+        if (!UserController.isAdmin(inquirerRoles) && !UserController.isUser(inquirerRoles)) {
             throw new ForbiddenException(inquirerId);
         }
 
@@ -135,6 +84,44 @@ public class SanctionController {
         return ResponseEntity.ok(sanctionRepository.save(newSanction));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<Sanction>> paginateSanctions(
+            @RequestParam(name = "sort", defaultValue = "datetime") String sort,
+            @RequestParam(name = "order", defaultValue = "desc") String order,
+            @RequestParam(name = "size", defaultValue = "10") Integer size,
+            @RequestParam(name = "page", defaultValue = "1") Integer page,
+            @RequestParam("inquirerid") UUID inquirerId) {
+        if(!userRepository.existsById(inquirerId)) {
+            throw new InquirerNotFoundException(inquirerId);
+        }
+        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
+            throw new ForbiddenException(inquirerId);
+        }
+        String sanitizedSort;
+        switch(sort) {
+            case "likes":
+                sanitizedSort = "likesNumber";
+                break;
+            default:
+                sanitizedSort = "datetime";
+        }
+        Sort sanitizedSortOrder;
+        switch(order.toUpperCase(Locale.ROOT)) {
+            case "ASC":
+                sanitizedSortOrder = Sort.by(sanitizedSort).ascending();
+                break;
+            default:
+                sanitizedSortOrder = Sort.by(sanitizedSort).descending();
+        }
+
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                sanitizedSortOrder
+        );
+        return ResponseEntity.ok(sanctionRepository.findAll(pageRequest));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Sanction> getSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
         if(!userRepository.existsById(inquirerId)) {
@@ -147,7 +134,7 @@ public class SanctionController {
                 .orElseThrow(() -> new SanctionNotFoundException(id)));
     }
 
-    @GetMapping("/{id}/isLiked")
+    @GetMapping("/{id}/like")
     public ResponseEntity<Boolean> isLiked(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
         if(!sanctionRepository.existsById(id)) {
             throw new SanctionNotFoundException(id);
@@ -161,7 +148,7 @@ public class SanctionController {
         return ResponseEntity.ok(Boolean.TRUE);
     }
 
-    @PutMapping("/{id}/like")
+    @PostMapping("/{id}/like")
     public ResponseEntity<Sanction> likeSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
         Sanction updatableSanction = sanctionRepository.findById(id)
                 .orElseThrow(() -> new SanctionNotFoundException(id));
@@ -183,7 +170,7 @@ public class SanctionController {
         return ResponseEntity.ok(updatableSanction);
     }
 
-    @PutMapping("/{id}/unlike")
+    @DeleteMapping("/{id}/like")
     public ResponseEntity<Sanction> unlikeSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
         Sanction updatableSanction = sanctionRepository.findById(id)
                 .orElseThrow(() -> new SanctionNotFoundException(id));
