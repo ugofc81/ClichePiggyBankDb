@@ -1,9 +1,6 @@
 package com.example.clichepiggybankdb.controller;
 
-import com.example.clichepiggybankdb.controller.exceptions.AccountNotEmptyException;
-import com.example.clichepiggybankdb.controller.exceptions.ForbiddenException;
-import com.example.clichepiggybankdb.controller.exceptions.InquirerNotFoundException;
-import com.example.clichepiggybankdb.controller.exceptions.UserNotFoundException;
+import com.example.clichepiggybankdb.controller.exceptions.*;
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.User;
@@ -54,6 +51,30 @@ public class UserController {
         return ResponseEntity.ok(newUser);
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<User> register(@RequestBody User newUser) {
+        List<User> users = userRepository.findAll();
+        if (users.size() > 0) {
+            throw new GoneException("first registering");
+        }
+
+        //the first user is user and admin.
+        List<String> roles = new ArrayList<>();
+        roles.add("user");
+        roles.add("admin");
+        newUser.setRoles(roles);
+        User u = userRepository.save(newUser);
+
+        newUser.getRoles().forEach(role -> {
+            Role newRole = new Role();
+            newRole.setRole(role);
+            newRole.setUserGuid(u.getId());
+            rolesRepository.save(newRole);
+        });
+
+        return ResponseEntity.ok(newUser);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<User> deleteUser(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
         if (!userRepository.existsById(inquirerId)) {
@@ -62,34 +83,30 @@ public class UserController {
         if (!isAdmin(rolesRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-
-        if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException(id);
+        if (id.equals(inquirerId)) {
+            throw new ForbiddenException(inquirerId);
         }
+        User toBeDeleted = userRepository
+                .findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
 
-        Account toBeVerified = accountRepository.findByOwnerGuid(id).getFirst();
-        if (toBeVerified != null) {
-            if (toBeVerified.getBalance() > 0) {
-                throw new AccountNotEmptyException(toBeVerified.getId());
+        List<Account> toBeVerified = accountRepository.findByOwnerGuid(id);
+        if (!toBeVerified.isEmpty()) {
+            if (toBeVerified.get(0).getBalance() > 0) {
+                throw new AccountNotEmptyException(toBeVerified.get(0).getId());
             } else {
-                accountRepository.deleteById(toBeVerified.getId());
+                accountRepository.deleteById(toBeVerified.get(0).getId());
             }
         }
-        if (userRepository.findById(id).isEmpty()){
-            throw new UserNotFoundException(id);
-        };
         List<Role> rolesToBeDeleted = rolesRepository.findByUserGuid(id);
-        User toBeDeleted = userRepository.findById(id).get();
+        rolesToBeDeleted.forEach(rolesRepository::delete);
         userRepository.deleteById(id);
         return ResponseEntity.ok(toBeDeleted);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable UUID id) {
-        if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException(id);
-        }
-        return ResponseEntity.ok(userRepository.findById(id).get());
+        return ResponseEntity.ok(userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
     }
 
     public static boolean isAdmin(List<Role> roles) {
@@ -98,6 +115,5 @@ public class UserController {
 
     public static boolean isUser(List<Role> roles) {
         return roles.stream().anyMatch(role -> role.getRole().equals("user"));
-
     }
 }

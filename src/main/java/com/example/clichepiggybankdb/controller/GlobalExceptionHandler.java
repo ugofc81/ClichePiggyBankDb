@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Map;
 
@@ -29,6 +30,16 @@ public class GlobalExceptionHandler {
                 "message", ex.getMessage()
         );
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(GoneException.class)
+    public ResponseEntity<Map<String, Object>> handleGoneException(GoneException ex) {
+        Map<String, Object> body = Map.of(
+                "status", HttpStatus.GONE.value(),
+                "error", "Gone",
+                "message", ex.getMessage()
+        );
+        return new ResponseEntity<>(body, HttpStatus.GONE);
     }
 
     @ExceptionHandler(ForbiddenException.class)
