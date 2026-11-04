@@ -135,17 +135,16 @@ public class SanctionController {
     }
 
     @GetMapping("/{id}/like")
-    public ResponseEntity<Boolean> isLiked(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
+    public ResponseEntity<Like> isLiked(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
         if(!sanctionRepository.existsById(id)) {
             throw new SanctionNotFoundException(id);
         }
         if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
-        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isEmpty()) {
-            return ResponseEntity.ok(Boolean.FALSE);
-        }
-        return ResponseEntity.ok(Boolean.TRUE);
+        return likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId)
+                .map(ResponseEntity::ok) // Returns 200 OK + the full object
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found
     }
 
     @PostMapping("/{id}/like")

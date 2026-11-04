@@ -30,7 +30,7 @@ export default function Accounts() {
                                 position: 'relative',
                         }}
                         >
-                            <p><strong>{users.find(u => u.id === a.ownerId)?.name}</strong> owes <strong>{a.balance}</strong></p>
+                            <p><strong>{users.find(u => u.id === a.ownerGuid)?.name}</strong> owes <strong>{a.balance}</strong></p>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
                                 {/* --- RESET BUTTON --- */}
                                 <button
