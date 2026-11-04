@@ -6,7 +6,6 @@ import com.example.clichepiggybankdb.model.Like;
 import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.Sanction;
 import com.example.clichepiggybankdb.service.*;
-import jakarta.persistence.TypedQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -119,32 +118,35 @@ public class SanctionController {
                 size,
                 sanitizedSortOrder
         );
-        return ResponseEntity.ok(sanctionRepository.findAll(pageRequest));
+        Page<Sanction> sanctionsPage = sanctionRepository.findAll(pageRequest);
+        sanctionsPage.getContent().forEach(s -> {
+            if (likeRepository.findByLikedGuidAndLikerGuid(s.getId(), inquirerId).isEmpty()) {
+                s.setLiked(Boolean.FALSE);
+            } else {
+                s.setLiked(Boolean.TRUE);
+            }
+        });
+
+        return ResponseEntity.ok(sanctionsPage);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Sanction> getSanction(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
+    public ResponseEntity<Sanction> getSanction(
+            @PathVariable UUID id,  @RequestParam("inquirerid") UUID inquirerId) {
         if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
         }
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        return ResponseEntity.ok(sanctionRepository.findById(id)
-                .orElseThrow(() -> new SanctionNotFoundException(id)));
-    }
-
-    @GetMapping("/{id}/like")
-    public ResponseEntity<Like> isLiked(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        if(!sanctionRepository.existsById(id)) {
-            throw new SanctionNotFoundException(id);
+        Sanction sanction = sanctionRepository.findById(id)
+                .orElseThrow(() -> new SanctionNotFoundException(id));
+        if (likeRepository.findByLikedGuidAndLikerGuid(sanction.getId(), inquirerId).isEmpty()) {
+            sanction.setLiked(Boolean.FALSE);
+        } else {
+            sanction.setLiked(Boolean.TRUE);
         }
-        if(!userRepository.existsById(inquirerId)) {
-            throw new InquirerNotFoundException(inquirerId);
-        }
-        return likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId)
-                .map(ResponseEntity::ok) // Returns 200 OK + the full object
-                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found
+        return ResponseEntity.ok(sanction);
     }
 
     @PostMapping("/{id}/like")
@@ -166,6 +168,7 @@ public class SanctionController {
         updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() + 1);
         sanctionRepository.save(updatableSanction);
         likeRepository.save(newLike);
+        updatableSanction.setLiked(Boolean.TRUE);
         return ResponseEntity.ok(updatableSanction);
     }
 
@@ -186,6 +189,7 @@ public class SanctionController {
         updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() - 1);
         sanctionRepository.save(updatableSanction);
         likeRepository.delete(deletableLike);
+        updatableSanction.setLiked(Boolean.FALSE);
         return ResponseEntity.ok(updatableSanction);
     }
 }

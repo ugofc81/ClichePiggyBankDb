@@ -1,6 +1,8 @@
 package com.example.clichepiggybankdb.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.Date;
 import java.util.UUID;
@@ -11,12 +13,16 @@ public class Sanction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID) // Automatically generates clean UUIDs!
+    @Column(name = "id", length = 16)
+    @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16)
     private UUID id;
 
-    @Column(nullable = false, unique = false, name = "reporter_guid")
+    @Column(nullable = false, unique = false, name = "reporter_guid", length = 16)
+    @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16)
     private UUID reporterGuid;
 
-    @Column(nullable = false, unique = false, name = "receiver_guid")
+    @Column(nullable = false, unique = false, name = "receiver_guid", length = 16)
+    @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16))
     private UUID receiverGuid;
 
     @Column(nullable = false, unique = false, name = "amount")
@@ -30,6 +36,16 @@ public class Sanction {
 
     @Column(nullable = false, unique = false, name = "likes_number")
     private Integer likesNumber;
+
+    private Boolean isLiked;
+
+    public Boolean getLiked() {
+        return isLiked;
+    }
+
+    public void setLiked(Boolean liked) {
+        isLiked = liked;
+    }
 
     public Sanction() {}
 

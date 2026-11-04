@@ -349,7 +349,7 @@ class SanctionControllerTest {
         Mockito.when(roleRepository.findByUserGuid(inquirer.getId())).thenReturn(roles);
 
         UUID missingId = UUID.randomUUID();
-        Mockito.when(sanctionRepository.existsById(missingId)).thenReturn(Boolean.FALSE);
+        Mockito.when(sanctionRepository.findById(missingId)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/sanctions/{id}", missingId)
                         .param("inquirerid", inquirer.getId().toString()))
@@ -380,7 +380,11 @@ class SanctionControllerTest {
         Mockito.when(roleRepository.findByUserGuid(reporter.getId())).thenReturn(roles);
         Mockito.when(userRepository.existsById(reporter.getId())).thenReturn(Boolean.TRUE);
 
+        Like like = new Like();
+        like.setLikerGuid(reporter.getId());
+        like.setLikedGuid(sanctionId);
         Mockito.when(sanctionRepository.findById(sanctionId)).thenReturn(Optional.of(sanction));
+        Mockito.when(likeRepository.findByLikedGuidAndLikerGuid(sanctionId, reporter.getId())).thenReturn(Optional.of(like));
 
         mockMvc.perform(get("/api/sanctions/{id}", sanctionId)
                         .param("inquirerid", reporter.getId().toString()))

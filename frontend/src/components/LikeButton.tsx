@@ -13,7 +13,6 @@ export default function LikeButton({ sanctionId, inquirerId, initialLikes, onLik
     const [hasLiked, setHasLiked] = useState<boolean>(false);
     const [checking, setChecking] = useState<boolean>(true);
 
-    // 1. Check the liking status on mount or when the profile changes
     useEffect(() => {
         if (!inquirerId) {
             setChecking(false);
@@ -26,35 +25,36 @@ export default function LikeButton({ sanctionId, inquirerId, initialLikes, onLik
         api.get<Like>(`/sanctions/${sanctionId}/like`, {
             params: { inquirerid: inquirerId }
         })
-            .then((response) => {
-                // Reads response.data.isLiked correctly
-                setHasLiked(response.data.isLiked);
+            .then(() => {
+                // 200 OK -> Resource exists, user liked it
+                setHasLiked(true);
             })
             .catch((err) => {
-                console.error("Error evaluating like eligibility:", err);
+                if (err.response && err.response.status === 404) {
+                    // 404 Not Found -> Resource doesn't exist, user hasn't liked it
+                    setHasLiked(false);
+                } else {
+                    console.error("Actual network or code error occurred", err);
+                }
             })
             .finally(() => {
                 setChecking(false);
             });
     }, [sanctionId, inquirerId]);
 
-    // 2. Handle the POST click operation
     const handleLikeClick = async () => {
         if (!inquirerId) return;
 
         try {
-            // Targets your POST endpoint: POST /sanctions/{id}/like?inquirerid={uuid}
+            // POST /sanctions/{id}/like?inquirerid={uuid}
             await api.post(`/sanctions/${sanctionId}/like`, null, {
                 params: { inquirerid: inquirerId }
             });
 
-            // Toggle the local state instantly for snappy UI
-            setHasLiked(!hasLiked);
-
-            // Notify parent to fetch new counts / logs globally
-            onLikeTriggered();
+            setHasLiked(!hasLiked); // Instantly toggle state
+            onLikeTriggered();       // Refresh parent activity feeds
         } catch (err) {
-            console.error("Failed to click like:", err);
+            console.error("Failed to commit like:", err);
         }
     };
 
