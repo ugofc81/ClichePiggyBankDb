@@ -21,16 +21,22 @@ export interface Sanction {
     reason: string;
     datetime: string; // ISO Date String
     likesNumber: number;
+    liked: boolean;
+}
+
+export interface SpringPage<T> {
+    content: T[];          // This is where your actual list array resides now
+    totalElements: number; // Total rows in the database
+    totalPages: number;    // Total pages based on size
+    size: number;          // Items per page
+    number: number;        // Current page index (0-indexed)
+    first: boolean;
+    last: boolean;
+    empty: boolean;
 }
 
 export interface Account {
     id: string;
     ownerGuid: string;
     balance: number;
-}
-
-export interface Like {
-    id: string;
-    likedGuid: string;
-    likerGuid: string;
 }

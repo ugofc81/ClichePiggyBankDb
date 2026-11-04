@@ -1,6 +1,8 @@
 package com.example.clichepiggybankdb.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -10,9 +12,12 @@ public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID) // Automatically generates clean UUIDs!
+    @Column(name = "id", length = 16)
+    @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16)
     private UUID id;
 
-    @Column(nullable = false, unique = false, name = "user_guid") // Database constraint: cannot be empty or duplicate
+    @Column(nullable = false, unique = false, name = "user_guid", length = 16) // Database constraint: cannot be empty or duplicate
+    @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16)
     private UUID userGuid;
 
     @Column(nullable = false, unique = false, name = "role") //
