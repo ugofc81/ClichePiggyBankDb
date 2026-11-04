@@ -318,7 +318,7 @@ class SanctionControllerTest {
 
         String sort = "datetime";
         PageRequest pageRequest = PageRequest.of(
-                Integer.valueOf("1"),
+                Integer.valueOf("0"),
                 Integer.valueOf("10"),
                 Sort.by(sort).descending()
         );

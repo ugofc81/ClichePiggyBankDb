@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
-import type {User, Sanction, Account} from '../types';
+import type {User, Sanction, Account, SpringPage} from '../types';
 
 export function usePiggyBank() {
     const [users, setUsers] = useState<User[]>([]);
@@ -31,10 +31,10 @@ export function usePiggyBank() {
             // 2. Fetch Sanctions only if inquirerId is active, otherwise reset array
             if (inquirerId) {
                 try {
-                    const sanctionsRes = await api.get<Sanction[]>('/sanctions', {
+                    const sanctionsRes = await api.get<SpringPage<Sanction>>('/sanctions', {
                         params: { inquirerid: inquirerId }
                     });
-                    setSanctions(sanctionsRes.data);
+                    setSanctions(sanctionsRes.data.content);
                 } catch (sanctionErr) {
                     console.error('Failed to load sanctions secure view:', sanctionErr);
                     // Don't crash the whole hook; just set an isolated view state error or clear ledger
@@ -69,8 +69,8 @@ export function usePiggyBank() {
         // Build the payload matching what your Spring Boot Controller expects
         // If your backend maps using entire objects, we pass the IDs or look them up
         const payload = {
-            reporter: { id: inquirerId },
-            receiver: { id: newSanction.receiverGuid },
+            reporterGuid: inquirerId,
+            receiverGuid: newSanction.receiverGuid,
             amount: newSanction.amount, // Passes "LOW", "STANDARD", or "HIGH"
             reason: newSanction.reason,
         };
@@ -118,21 +118,6 @@ export function usePiggyBank() {
         } catch (err) {
             console.error('Failed to delete user:', err);
             throw new Error('Could not delete user from the server.');
-        }
-    };
-    const likesSanction = async (sanctionId: string) => {
-        if (!inquirerId) return false;
-
-        try {
-            await api.get(`/sanctions/${sanctionId}/like`, {
-                params: { inquirerid: inquirerId }
-            });
-
-            // Refresh data instantly so the UI updates the like count and likedBy list
-            await fetchData();
-        } catch (err) {
-            console.error('Failed to know if inquirer likes:', err);
-            alert('Failed to know if inquirer likes.');
         }
     };
     const likeSanction = async (sanctionId: string) => {
@@ -186,5 +171,5 @@ export function usePiggyBank() {
     // Find the full User object corresponding to the URL ID if it exists
     const currentUser = users.find(u => u.id === inquirerId) || null;
 
-    return { users, sanctions, accounts, loading, error, currentUser, inquirerId, likesSanction, likeSanction, unlikeSanction, createSanction, resetAccount, createUser, deleteUser, refresh: fetchData };
+    return { users, sanctions, accounts, loading, error, currentUser, inquirerId, likeSanction, unlikeSanction, createSanction, resetAccount, createUser, deleteUser, refresh: fetchData };
 }

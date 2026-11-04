@@ -4,7 +4,7 @@ import { usePiggyBank } from '../hooks/usePiggyBank';
 import { SanctionValues, type SanctionAmount } from '../types';
 
 export default function Sanctions() {
-    const { sanctions, users, loading, error, inquirerId, createSanction, likesSanction, likeSanction, unlikeSanction } = usePiggyBank();
+    const { sanctions, users, loading, error, inquirerId, createSanction, likeSanction, unlikeSanction } = usePiggyBank();
 
     // Local Form States
     const [receiverGuid, setReceiverGuid] = useState('');
@@ -57,7 +57,7 @@ export default function Sanctions() {
             setFormError(null);
 
             if (createSanction) {
-                await createSanction({ receiverGuid: receiverGuid, reason, amount });
+                await createSanction({ receiverGuid, reason, amount });
                 // Clear form values on success
                 setReason('');
                 setReceiverGuid('');
@@ -150,9 +150,6 @@ export default function Sanctions() {
                     {error && <p style={{ color: 'red' }}>{error}</p>}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {sanctions.map(s => {
-                            // Check if the currently logged-in user has already liked this sanction
-                            const hasLiked = likesSanction(s.id);
-
                             return (
                                 <div
                                     key={s.id}
@@ -164,7 +161,7 @@ export default function Sanctions() {
                                         position: 'relative'
                                     }}
                                 >
-                                    <p><strong>{s.reporterGuid}</strong> reported <strong>{s.receiverGuid}</strong></p>
+                                    <p><strong>{users.find(u => u.id === s.reporterGuid)?.name}</strong> reported <strong>{users.find(u => u.id === s.receiverGuid)?.name}</strong></p>
                                     <p style={{ color: '#555', margin: '5px 0' }}><em>"{s.reason}"</em></p>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
@@ -174,22 +171,22 @@ export default function Sanctions() {
 
                                         {/* --- INTERACTIVE LIKE BUTTON --- */}
                                         <button
-                                            onClick={() => likesSanction(s.id) ? unlikeSanction && unlikeSanction(s.id) : likeSanction && likeSanction(s.id)}
+                                            onClick={() => s.liked ? unlikeSanction && unlikeSanction(s.id) : likeSanction && likeSanction(s.id)}
                                             style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: '6px',
                                                 padding: '6px 12px',
-                                                backgroundColor: likesSanction(s.id) ? '#ffe6e6' : '#fff',
-                                                border: hasLiked ? '1px solid #ff4d4d' : '1px solid #ccc',
-                                                color: hasLiked ? '#ff4d4d' : '#333',
+                                                backgroundColor: s.liked ? '#ffe6e6' : '#fff',
+                                                border: s.liked ? '1px solid #ff4d4d' : '1px solid #ccc',
+                                                color: s.liked ? '#ff4d4d' : '#333',
                                                 borderRadius: '20px',
                                                 cursor: 'pointer',
                                                 fontWeight: 'bold',
                                                 transition: 'all 0.2s ease'
                                             }}
                                         >
-                                            {hasLiked ? '❤️' : '🤍'} {likesSanction(s.id) || 0}
+                                            {s.liked ? '❤️' : '🤍'} {s.likesNumber || 0}
                                         </button>
                                     </div>
                                 </div>

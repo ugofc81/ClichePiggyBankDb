@@ -37,14 +37,14 @@ public class Sanction {
     @Column(nullable = false, unique = false, name = "likes_number")
     private Integer likesNumber;
 
-    private Boolean isLiked;
+    private Boolean liked;
 
     public Boolean getLiked() {
-        return isLiked;
+        return liked;
     }
 
     public void setLiked(Boolean liked) {
-        isLiked = liked;
+        this.liked = liked;
     }
 
     public Sanction() {}

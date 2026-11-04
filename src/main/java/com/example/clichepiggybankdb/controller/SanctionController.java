@@ -53,7 +53,7 @@ public class SanctionController {
 
     @PostMapping
     public ResponseEntity<Sanction> createSanction(@RequestBody Sanction newSanction, @RequestParam("inquirerid") UUID inquirerId) {
-        newSanction.setDatetime(new Date());
+        System.out.println(inquirerId.toString());
 
         if(!userRepository.existsById(newSanction.getReceiverGuid())) {
             throw new UserNotFoundException(newSanction.getReceiverGuid());
@@ -88,7 +88,7 @@ public class SanctionController {
             @RequestParam(name = "sort", defaultValue = "datetime") String sort,
             @RequestParam(name = "order", defaultValue = "desc") String order,
             @RequestParam(name = "size", defaultValue = "10") Integer size,
-            @RequestParam(name = "page", defaultValue = "1") Integer page,
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam("inquirerid") UUID inquirerId) {
         if(!userRepository.existsById(inquirerId)) {
             throw new InquirerNotFoundException(inquirerId);
