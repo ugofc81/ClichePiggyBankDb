@@ -63,14 +63,14 @@ export function usePiggyBank() {
         fetchData();
     }, [inquirerId]); // Re-fetch data instantly if the logged-in user changes in the URL
 
-    const createSanction = async (newSanction: { receiverId: string; reason: string; amount: string }) => {
+    const createSanction = async (newSanction: { receiverGuid: string; reason: string; amount: string }) => {
         if (!inquirerId) return;
 
         // Build the payload matching what your Spring Boot Controller expects
         // If your backend maps using entire objects, we pass the IDs or look them up
         const payload = {
             reporter: { id: inquirerId },
-            receiver: { id: newSanction.receiverId },
+            receiver: { id: newSanction.receiverGuid },
             amount: newSanction.amount, // Passes "LOW", "STANDARD", or "HIGH"
             reason: newSanction.reason,
         };
@@ -120,11 +120,26 @@ export function usePiggyBank() {
             throw new Error('Could not delete user from the server.');
         }
     };
+    const likesSanction = async (sanctionId: string) => {
+        if (!inquirerId) return false;
+
+        try {
+            await api.get(`/sanctions/${sanctionId}/like`, {
+                params: { inquirerid: inquirerId }
+            });
+
+            // Refresh data instantly so the UI updates the like count and likedBy list
+            await fetchData();
+        } catch (err) {
+            console.error('Failed to know if inquirer likes:', err);
+            alert('Failed to know if inquirer likes.');
+        }
+    };
     const likeSanction = async (sanctionId: string) => {
         if (!inquirerId) return;
 
         try {
-            await api.put(`/sanctions/${sanctionId}/like`, null, {
+            await api.post(`/sanctions/${sanctionId}/like`, null, {
                 params: { inquirerid: inquirerId }
             });
 
@@ -140,7 +155,7 @@ export function usePiggyBank() {
         if (!inquirerId) return;
 
         try {
-            await api.put(`/sanctions/${sanctionId}/unlike`, null, {
+            await api.delete(`/sanctions/${sanctionId}/like`, {
                 params: { inquirerid: inquirerId }
             });
 
@@ -171,5 +186,5 @@ export function usePiggyBank() {
     // Find the full User object corresponding to the URL ID if it exists
     const currentUser = users.find(u => u.id === inquirerId) || null;
 
-    return { users, sanctions, accounts, loading, error, currentUser, inquirerId, likeSanction, unlikeSanction, createSanction, resetAccount, createUser, deleteUser, refresh: fetchData };
+    return { users, sanctions, accounts, loading, error, currentUser, inquirerId, likesSanction, likeSanction, unlikeSanction, createSanction, resetAccount, createUser, deleteUser, refresh: fetchData };
 }

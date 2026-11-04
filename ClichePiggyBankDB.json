@@ -1,0 +1,459 @@
+{
+  "info": {
+    "name": "ClichePiggyBankDB",
+    "description": null,
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "account reset",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/accounts/bf703f52-64bd-4c74-8fc4-a279b777ca8e/reset?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "accounts",
+            "bf703f52-64bd-4c74-8fc4-a279b777ca8e",
+            "reset"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              "const cookieJar = pm.cookies.jar();",
+              "",
+              "// Define the mandatory cookie string with the .google.com domain",
+              "const consentCookie = \"CONSENT=PENDING+999; Domain=.google.com; Path=/; Secure; SameSite=None\";",
+              "",
+              "cookieJar.set(\"https://google.com\", \"CONSENT\", consentCookie, function (error) {",
+              "    if (error) {",
+              "        console.error(\"Injection failed! Double-check your Cookie Allowlist:\", error);",
+              "    } else {",
+              "        console.log(\"Cookie successfully set!\");",
+              "    }",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.expect(pm.response.code).to.equal(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "accounts list",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/accounts",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "accounts"
+          ],
+          "query": [],
+          "variable": []
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              "const cookieJar = pm.cookies.jar();",
+              "",
+              "// Define the mandatory cookie string with the .google.com domain",
+              "const consentCookie = \"CONSENT=PENDING+999; Domain=.google.com; Path=/; Secure; SameSite=None\";",
+              "",
+              "cookieJar.set(\"https://google.com\", \"CONSENT\", consentCookie, function (error) {",
+              "    if (error) {",
+              "        console.error(\"Injection failed! Double-check your Cookie Allowlist:\", error);",
+              "    } else {",
+              "        console.log(\"Cookie successfully set!\");",
+              "    }",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.expect(pm.response.code).to.equal(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sanction list",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions?sort=likes&order=asc&size=10&page=0&inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "sanctions"
+          ],
+          "query": [
+            {
+              "key": "sort",
+              "value": "likes"
+            },
+            {
+              "key": "order",
+              "value": "asc"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            },
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sanction create",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "sanctions"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"receiverGuid\": \"d6a4a39f-5c5b-40b2-9605-920aff30be81\",\n    \"reason\": \"Kleine Strafe\",\n    \"amount\": \"LOW\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sanction like",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/aca2bb03-e155-42ce-9f1f-c5cea7998ab1/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "sanctions",
+            "aca2bb03-e155-42ce-9f1f-c5cea7998ab1",
+            "like"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sanction unlike",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/aca2bb03-e155-42ce-9f1f-c5cea7998ab1/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "sanctions",
+            "aca2bb03-e155-42ce-9f1f-c5cea7998ab1",
+            "like"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sanction isLiked",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/sanctions/d9e76b5a-6372-4a91-9b84-f366b0bb0117/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "sanctions",
+            "d9e76b5a-6372-4a91-9b84-f366b0bb0117",
+            "like"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "users get",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/users",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [],
+          "variable": []
+        }
+      }
+    },
+    {
+      "name": "user create",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/users?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "    {\n        \"name\": \"Pippo\",\n        \"roles\": [\n            \"user\"\n        ]\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "user delete",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/users/ac8735a4-777c-47f9-91a4-a92d1ba35bbf?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "users",
+            "ac8735a4-777c-47f9-91a4-a92d1ba35bbf"
+          ],
+          "query": [
+            {
+              "key": "inquirerid",
+              "value": "0067df0c-2285-4a7a-b3a6-151c1e33d309"
+            }
+          ],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "    {\n        \"id\": \"01ed6752-1665-41e1-a120-ca25c42a7562\",\n        \"name\": \"Colin\",\n        \"roles\": [\n            \"user\"\n        ]\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "user register",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "description": "",
+        "url": {
+          "raw": "http://localhost:9092/api/users/register",
+          "protocol": "http",
+          "host": [
+            "localhost:9092"
+          ],
+          "path": [
+            "api",
+            "users",
+            "register"
+          ],
+          "query": [],
+          "variable": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "    {\n        \"name\": \"Colin\",\n        \"roles\": [\n            \"user\"\n        ]\n    }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "variable": []
+}

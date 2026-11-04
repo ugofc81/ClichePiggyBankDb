@@ -15,17 +15,22 @@ export const SanctionValues: Record<SanctionAmount, number> = {
 
 export interface Sanction {
     id: string;
-    reporter: User;
-    receiver: User;
+    reporterGuid: string;
+    receiverGuid: string;
     amount: SanctionAmount;
     reason: string;
     datetime: string; // ISO Date String
-    likedBy: string[]; // Set<UUID>
-    likes: number;
+    likesNumber: number;
 }
 
 export interface Account {
     id: string;
-    ownerId: string;
+    ownerGuid: string;
     balance: number;
+}
+
+export interface Like {
+    id: string;
+    likedGuid: string;
+    likerGuid: string;
 }

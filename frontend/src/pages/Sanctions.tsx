@@ -4,10 +4,10 @@ import { usePiggyBank } from '../hooks/usePiggyBank';
 import { SanctionValues, type SanctionAmount } from '../types';
 
 export default function Sanctions() {
-    const { sanctions, users, loading, error, inquirerId, createSanction, likeSanction, unlikeSanction } = usePiggyBank();
+    const { sanctions, users, loading, error, inquirerId, createSanction, likesSanction, likeSanction, unlikeSanction } = usePiggyBank();
 
     // Local Form States
-    const [receiverId, setReceiverId] = useState('');
+    const [receiverGuid, setReceiverGuid] = useState('');
     const [reason, setReason] = useState('');
     const [amount, setAmount] = useState<SanctionAmount>('STANDARD');
     const [formError, setFormError] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export default function Sanctions() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!receiverId || !reason) {
+        if (!receiverGuid || !reason) {
             setFormError('Please complete all form fields.');
             return;
         }
@@ -57,10 +57,10 @@ export default function Sanctions() {
             setFormError(null);
 
             if (createSanction) {
-                await createSanction({ receiverId, reason, amount });
+                await createSanction({ receiverGuid: receiverGuid, reason, amount });
                 // Clear form values on success
                 setReason('');
-                setReceiverId('');
+                setReceiverGuid('');
                 setAmount('STANDARD');
                 alert('Sanction issued successfully!');
             }
@@ -86,8 +86,8 @@ export default function Sanctions() {
                         <div>
                             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Receiver:</label>
                             <select
-                                value={receiverId}
-                                onChange={(e) => setReceiverId(e.target.value)}
+                                value={receiverGuid}
+                                onChange={(e) => setReceiverGuid(e.target.value)}
                                 style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
                             >
                                 <option value="">-- Select Member --</option>
@@ -151,7 +151,7 @@ export default function Sanctions() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {sanctions.map(s => {
                             // Check if the currently logged-in user has already liked this sanction
-                            const hasLiked = s.likedBy?.includes(inquirerId || '');
+                            const hasLiked = likesSanction(s.id);
 
                             return (
                                 <div
@@ -164,7 +164,7 @@ export default function Sanctions() {
                                         position: 'relative'
                                     }}
                                 >
-                                    <p><strong>{s.reporter.name}</strong> reported <strong>{s.receiver.name}</strong></p>
+                                    <p><strong>{s.reporterGuid}</strong> reported <strong>{s.receiverGuid}</strong></p>
                                     <p style={{ color: '#555', margin: '5px 0' }}><em>"{s.reason}"</em></p>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
@@ -174,13 +174,13 @@ export default function Sanctions() {
 
                                         {/* --- INTERACTIVE LIKE BUTTON --- */}
                                         <button
-                                            onClick={() => hasLiked ? unlikeSanction && unlikeSanction(s.id) : likeSanction && likeSanction(s.id)}
+                                            onClick={() => likesSanction(s.id) ? unlikeSanction && unlikeSanction(s.id) : likeSanction && likeSanction(s.id)}
                                             style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: '6px',
                                                 padding: '6px 12px',
-                                                backgroundColor: hasLiked ? '#ffe6e6' : '#fff',
+                                                backgroundColor: likesSanction(s.id) ? '#ffe6e6' : '#fff',
                                                 border: hasLiked ? '1px solid #ff4d4d' : '1px solid #ccc',
                                                 color: hasLiked ? '#ff4d4d' : '#333',
                                                 borderRadius: '20px',
@@ -189,7 +189,7 @@ export default function Sanctions() {
                                                 transition: 'all 0.2s ease'
                                             }}
                                         >
-                                            {hasLiked ? '❤️' : '🤍'} {s.likes || 0}
+                                            {hasLiked ? '❤️' : '🤍'} {likesSanction(s.id) || 0}
                                         </button>
                                     </div>
                                 </div>
