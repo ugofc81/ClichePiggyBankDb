@@ -37,6 +37,7 @@ public class Sanction {
     @Column(nullable = false, unique = false, name = "likes_number")
     private Integer likesNumber;
 
+    @Transient
     private Boolean liked;
 
     public Boolean getLiked() {
