@@ -161,7 +161,7 @@ export default function Sanctions() {
                                         position: 'relative'
                                     }}
                                 >
-                                    <p><strong>{users.find(u => u.id === s.reporterGuid)?.name}</strong> reported <strong>{users.find(u => u.id === s.receiverGuid)?.name}</strong></p>
+                                    <p><strong>{users.find(u => u.id === s.reporterGuid)?.name || "A deleted reporter"}</strong> reported <strong>{users.find(u => u.id === s.receiverGuid)?.name || "a deleted receiver."}</strong></p>
                                     <p style={{ color: '#555', margin: '5px 0' }}><em>"{s.reason}"</em></p>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>

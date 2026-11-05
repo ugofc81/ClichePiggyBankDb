@@ -70,6 +70,8 @@ public class SanctionController {
 
         newSanction.setReporterGuid(inquirerId);
         newSanction.setLikesNumber(0);
+        newSanction.setLiked(Boolean.FALSE);
+        newSanction.setDatetime(new Date());
 
         if (accountRepository.findByOwnerGuid(newSanction.getReceiverGuid()).isEmpty()) {
             Account toBeSaved = new Account();
