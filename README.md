@@ -1,7 +1,7 @@
 # Background information
 
 This project is based on a homework I received for a job interview I had in August 2026.
-I continued to develop it in order to learn new skills and experiment.
+I continued to develop it in order to learn new skills and make experiments.
 
 ## Backend
 Springboot application. The basic skeleton was built on the following requirements:
@@ -43,10 +43,14 @@ At least Level 1 must be completed. Whether Levels 2 and 3 will also be implemen
 | 3  	| As a piggibank user  	| impose penalties of varying amounts on other users  	| have more flexibility in determining the severity of penalties  	| * Sebastian gives Alex all three of the three possible amounts (0.50, 1, 2 €) one after another, which are then added up and credited to his account.  	|
 | 3  	| As a piggibank user  	| vote on the list of reasons  	| be able to choose a “Best Of”  	| * On the list of all entries, I can click a “Like” button for each entry (only one ‘Like’ per user per entry). An additional column in the list displays the total number of “Likes,” and the list is sorted according to that total.  	|
 
+## Data persistence
+Initially would read from/write into a json file, later I introduced Hibernate and persisted data on a MySQL database.
+This introduction was a major modification and I therefore created the current project in a separate repository.
+
 ## Frontend
 Created with React. A landing page is provided, that guides to three dedicated pages for:
 * Users
 * Accounts
 * Sanctions
 
-The featuers are added progressively. Whenever the frontend suggests a modification of the frontend, this is also adapted.
+The featuers are added progressively. Whenever the frontend suggests a modification of the backend, this is also adapted.
