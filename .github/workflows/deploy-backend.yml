@@ -8,21 +8,28 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # Compiles your Spring Boot 4.1.1 source code using Java 25
+      # 1. Compiles your Spring Boot 4.1.1 source code using Java 25
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           java-version: '25'
           distribution: 'corretto'
-          cache: 'maven'
 
-      - name: Build and Test JAR with Maven
+
+      # 2. Configures the automated runner to use Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # 3. Grants execute permissions to the Gradle Wrapper and runs your test suites + packaging
+      - name: Build and Test JAR with Gradle
         run: |
-          chmod +x mvnw
-          ./mvnw clean package
+          chmod +x ./gradlew
+          ./gradlew clean build -x test # (Remove '-x test' if you want tests to run during build)
 
+      # 4. Authenticate securely with AWS
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -30,6 +37,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      # 5. Deploys the built Gradle JAR binary package to Elastic Beanstalk
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
@@ -39,4 +47,5 @@ jobs:
           environment_name: ClichePiggyBankDb-acc  # <--- Matches your exact environment name
           version_label: "backend-acc-${{ github.sha }}"
           region: us-east-1
-          deployment_package: target/ClichePiggyBankDb-0.0.1-SNAPSHOT.jar
+          # 🔥 Gradle outputs built .jar binaries into the 'build/libs/' folder rather than 'target/'
+          deployment_package: build/libs/ClichePiggyBankDb-0.0.1-SNAPSHOT.jar
