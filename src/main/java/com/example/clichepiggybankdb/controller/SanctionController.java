@@ -16,7 +16,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/sanctions")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class SanctionController {
     private final SanctionRepository sanctionRepository;
     private final UserRepository userRepository;
