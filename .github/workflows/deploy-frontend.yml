@@ -1,8 +1,13 @@
-name: Deploy Frontend to AWS S3
+name: Deploy Frontend to AWS S3 (ACC)
 
 on:
   push:
     branches: [ main ]
+
+defaults:
+  run:
+    # 🆕 This forces ALL terminal commands below to execute inside your frontend subfolder
+    working-directory: ./frontend
 
 jobs:
   deploy:
@@ -15,12 +20,14 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          # 🆕 Tells the cacher where to find your package-lock.json
+          cache-dependency-path: './frontend/package-lock.json'
 
       - name: Install and Build Application for ACC
         run: |
           npm install
           # 🔥 Forces Vite to compile using the settings found inside .env.acceptance
-          npm run build -- --mode acceptance 
+          npm run build -- --mode acceptance
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -31,4 +38,5 @@ jobs:
 
       - name: Sync Build Folder to ACC S3 Bucket
         run: |
+          # 🆕 Uses the relative path to sync your built dist folder inside the subfolder
           aws s3 sync dist/ s3://cliche-piggybank-frontend-acc --delete
