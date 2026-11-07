@@ -1,0 +1,42 @@
+name: Deploy Backend to AWS Beanstalk (ACC)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Compiles your Spring Boot 4.1.1 source code using Java 25
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Build and Test JAR with Maven
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ClichePiggyBankDb
+          environment_name: ClichePiggyBankDb-acc  # <--- Matches your exact environment name
+          version_label: "backend-acc-${{ github.sha }}"
+          region: us-east-1
+          deployment_package: target/ClichePiggyBankDb-0.0.1-SNAPSHOT.jar
