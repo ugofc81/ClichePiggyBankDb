@@ -6,7 +6,7 @@ services:
   my-springboot-backend:
     build: .                 # Tells Docker to look for the Dockerfile in the current directory
     ports:
-      - "9092:9092"          # Keeps port 9092 accessible from your Linux machine
+      - "8080:8080"          # Keeps port 9092 accessible from your Linux machine
     volumes:
       - ./users.json:/app/users.json
       - ./accounts.json:/app/accounts.json
