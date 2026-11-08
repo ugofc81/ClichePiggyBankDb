@@ -9,5 +9,5 @@ RUN ./gradlew bootJar -x test
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
-EXPOSE 9092
-ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=9092"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=8080"]

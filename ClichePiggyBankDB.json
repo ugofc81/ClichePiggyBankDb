@@ -12,10 +12,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/accounts/bf703f52-64bd-4c74-8fc4-a279b777ca8e/reset?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/accounts/bf703f52-64bd-4c74-8fc4-a279b777ca8e/reset?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -77,10 +77,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/accounts",
+          "raw": "http://localhost:8080/api/accounts",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -138,10 +138,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/sanctions?sort=likes&order=asc&size=10&page=0&inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/sanctions?sort=likes&order=asc&size=10&page=0&inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -189,10 +189,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/sanctions?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/sanctions?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -224,10 +224,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/aca2bb03-e155-42ce-9f1f-c5cea7998ab1/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/sanctions/aca2bb03-e155-42ce-9f1f-c5cea7998ab1/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -261,10 +261,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/aca2bb03-e155-42ce-9f1f-c5cea7998ab1/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/sanctions/aca2bb03-e155-42ce-9f1f-c5cea7998ab1/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -301,10 +301,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/d9e76b5a-6372-4a91-9b84-f366b0bb0117/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/sanctions/d9e76b5a-6372-4a91-9b84-f366b0bb0117/like?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -338,10 +338,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/users",
+          "raw": "http://localhost:8080/api/users",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -359,10 +359,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/users?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/users?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -394,10 +394,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/users/ac8735a4-777c-47f9-91a4-a92d1ba35bbf?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
+          "raw": "http://localhost:8080/api/users/ac8735a4-777c-47f9-91a4-a92d1ba35bbf?inquirerid=0067df0c-2285-4a7a-b3a6-151c1e33d309",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",
@@ -430,10 +430,10 @@
         "header": [],
         "description": "",
         "url": {
-          "raw": "http://localhost:9092/api/users/register",
+          "raw": "http://localhost:8080/api/users/register",
           "protocol": "http",
           "host": [
-            "localhost:9092"
+            "localhost:8080"
           ],
           "path": [
             "api",

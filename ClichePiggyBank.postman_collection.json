@@ -51,12 +51,12 @@
         "method": "PUT",
         "header": [],
         "url": {
-          "raw": "http://localhost:9092/api/accounts/0a1c29ba-ae19-4fe4-b9ea-7732908df56b/reset?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
+          "raw": "http://localhost:8080/api/accounts/0a1c29ba-ae19-4fe4-b9ea-7732908df56b/reset?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "accounts",
@@ -118,12 +118,12 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:9092/api/accounts",
+          "raw": "http://localhost:8080/api/accounts",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "accounts"
@@ -150,12 +150,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/best",
+          "raw": "http://localhost:8080/api/sanctions/best",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions",
@@ -183,12 +183,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/latest?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "raw": "http://localhost:8080/api/sanctions/latest?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions",
@@ -222,12 +222,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/paginated?sort=datetime&order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "raw": "http://localhost:8080/api/sanctions/paginated?sort=datetime&order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions",
@@ -277,12 +277,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/best?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "raw": "http://localhost:8080/api/sanctions/best?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions",
@@ -316,12 +316,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/paginated?sort=likes&order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "raw": "http://localhost:8080/api/sanctions/paginated?sort=likes&order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions",
@@ -368,12 +368,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "raw": "http://localhost:8080/api/sanctions?inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions"
@@ -406,12 +406,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/paginated?order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
+          "raw": "http://localhost:8080/api/sanctions/paginated?order=desc&size=100&page=1&inquirerid=fba592ba-36c3-4479-ba38-bcaeceff9ff0",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions",
@@ -454,12 +454,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/sanctions/ecff1990-392c-4fd6-8f70-1cb14cf9ea7a/like?inquirerid=27ee6c9a-ce75-4515-a4a8-27e755efe0e2",
+          "raw": "http://localhost:8080/api/sanctions/ecff1990-392c-4fd6-8f70-1cb14cf9ea7a/like?inquirerid=27ee6c9a-ce75-4515-a4a8-27e755efe0e2",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "sanctions",
@@ -482,12 +482,12 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:9092/api/users",
+          "raw": "http://localhost:8080/api/users",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "users"
@@ -511,12 +511,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/users?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
+          "raw": "http://localhost:8080/api/users?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "users"
@@ -546,12 +546,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:9092/api/users/4d2903b6-e6c8-4e53-ae11-8f760b1827ea?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
+          "raw": "http://localhost:8080/api/users/4d2903b6-e6c8-4e53-ae11-8f760b1827ea?inquirerid=01ed6752-1665-41e1-a120-ca25c42a7562",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "9092",
+          "port": "8080",
           "path": [
             "api",
             "users",
