@@ -4,7 +4,24 @@ import { usePiggyBank } from '../hooks/usePiggyBank';
 import { SanctionValues, type SanctionAmount } from '../types';
 
 export default function Sanctions() {
-    const { sanctions, users, loading, error, inquirerId, createSanction, likeSanction, unlikeSanction } = usePiggyBank();
+    // At the top of Sanctions():
+    const {
+        sanctions,
+        users,
+        loading,
+        error,
+        inquirerId,
+        createSanction,
+        likeSanction,
+        unlikeSanction,
+        page,
+        setPage,
+        totalPages,
+        sort,
+        setSort,
+        order,
+        setOrder
+    } = usePiggyBank();
 
     // Local Form States
     const [receiverGuid, setReceiverGuid] = useState('');
@@ -145,54 +162,122 @@ export default function Sanctions() {
 
                 {/* --- RIGHT PANEL: SANCTIONS LIST --- */}
                 <div style={{ flex: 2 }}>
-                    <h3>Activity Feed</h3>
+                    {/* Header + Sort & Order Controls */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <h3 style={{ margin: 0 }}>Activity Feed</h3>
+
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <select
+                                value={sort}
+                                onChange={(e) => setSort(e.target.value as 'datetime' | 'likes')}
+                                style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid #ccc' }}
+                            >
+                                <option value="datetime">Sort by Date</option>
+                                <option value="likes">Sort by Likes</option>
+                            </select>
+
+                            <button
+                                type="button"
+                                onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
+                                style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ccc', background: '#fff', cursor: 'pointer' }}
+                            >
+                                {order === 'desc' ? '↓ Descending' : '↑ Ascending'}
+                            </button>
+                        </div>
+                    </div>
+
                     {loading && <p>Syncing secure ledger data...</p>}
                     {error && <p style={{ color: 'red' }}>{error}</p>}
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {sanctions.map(s => {
-                            return (
-                                <div
-                                    key={s.id}
+                        {sanctions.map(s => (
+                            <div
+                                key={s.id}
+                                style={{
+                                    border: '1px solid #eaeaea',
+                                    padding: '15px',
+                                    borderRadius: '6px',
+                                    backgroundColor: '#fafafa',
+                                    position: 'relative'
+                                }}
+                            >
+                                <p>
+                                    <strong>{users.find(u => u.id === s.reporterGuid)?.name || 'A deleted reporter'}</strong> reported{' '}
+                                    <strong>{users.find(u => u.id === s.receiverGuid)?.name || 'a deleted receiver.'}</strong>
+                                </p>
+                                <p style={{ color: '#555', margin: '5px 0' }}><em>"{s.reason}"</em></p>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                    <span style={{ fontSize: '12px', color: '#888' }}>
+                        {s.amount} • {new Date(s.datetime).toLocaleString()}
+                    </span>
+
+                                    {/* Red Heart Toggle Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => (s.liked ? unlikeSanction(s.id) : likeSanction(s.id))}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '6px 12px',
+                                            borderRadius: '20px',
+                                            border: s.liked ? '1px solid #e0245e' : '1px solid #ccc',
+                                            backgroundColor: s.liked ? '#ffeef2' : '#fff',
+                                            color: s.liked ? '#e0245e' : '#555',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <span>{s.liked ? '❤️' : '🤍'}</span>
+                                        <span>{s.likesNumber}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '20px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                                style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ccc', cursor: page === 0 ? 'not-allowed' : 'pointer' }}
+                            >
+                                &laquo; Prev
+                            </button>
+
+                            {Array.from({ length: totalPages }, (_, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setPage(idx)}
                                     style={{
-                                        border: '1px solid #eaeaea',
-                                        padding: '15px',
-                                        borderRadius: '6px',
-                                        backgroundColor: '#fafafa',
-                                        position: 'relative'
+                                        padding: '6px 12px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #ccc',
+                                        backgroundColor: page === idx ? '#0066cc' : '#fff',
+                                        color: page === idx ? '#fff' : '#333',
+                                        fontWeight: page === idx ? 'bold' : 'normal',
+                                        cursor: 'pointer'
                                     }}
                                 >
-                                    <p><strong>{users.find(u => u.id === s.reporterGuid)?.name || "A deleted reporter"}</strong> reported <strong>{users.find(u => u.id === s.receiverGuid)?.name || "a deleted receiver."}</strong></p>
-                                    <p style={{ color: '#555', margin: '5px 0' }}><em>"{s.reason}"</em></p>
+                                    {idx + 1}
+                                </button>
+                            ))}
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                                        <span style={{ backgroundColor: '#ffebe9', color: '#ff1a1a', padding: '3px 6px', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px' }}>
-                                            Amount: {s.amount} ({SanctionValues[s.amount]} €)
-                                        </span>
-
-                                        {/* --- INTERACTIVE LIKE BUTTON --- */}
-                                        <button
-                                            onClick={() => s.liked ? unlikeSanction && unlikeSanction(s.id) : likeSanction && likeSanction(s.id)}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                padding: '6px 12px',
-                                                backgroundColor: s.liked ? '#ffe6e6' : '#fff',
-                                                border: s.liked ? '1px solid #ff4d4d' : '1px solid #ccc',
-                                                color: s.liked ? '#ff4d4d' : '#333',
-                                                borderRadius: '20px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                                transition: 'all 0.2s ease'
-                                            }}
-                                        >
-                                            {s.liked ? '❤️' : '🤍'} {s.likesNumber || 0}
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                            <button
+                                type="button"
+                                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                disabled={page >= totalPages - 1}
+                                style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ccc', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer' }}
+                            >
+                                Next &raquo;
+                            </button>
+                        </div>
+                    )}
                 </div>
                 {/* --- HERE FINISHES THE SANCTION LIST --- */}
                 {/* --- HERE BEGINS THE GENERAL CONTAINER AGAIN --- */}

@@ -23,8 +23,6 @@ public class SanctionController {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final LikeRepository likeRepository;
-    private final static int AMOUNT_OF_LAST_SANCTIONS = 10;
-    public final static String LAST_SANCTIONS_QUERY = "SELECT s FROM sanctions s ORDER BY s.datetime DESC";
 
     public SanctionController(
             SanctionRepository sanctionRepository,
@@ -39,17 +37,6 @@ public class SanctionController {
         this.roleRepository = roleRepository;
         this.likeRepository = likeRepository;
     }
-
-//    @GetMapping("/all")
-//    public ResponseEntity<List<Sanction>> getAllSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-//        if(!userRepository.existsById(inquirerId)) {
-//            throw new InquirerNotFoundException(inquirerId);
-//        }
-//        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
-//            throw new ForbiddenException(inquirerId);
-//        }
-//        return ResponseEntity.ok(new ArrayList<>(sanctionRepository.findAll()));
-//    }
 
     @PostMapping
     public ResponseEntity<Sanction> createSanction(@RequestBody Sanction newSanction, @RequestParam("inquirerid") UUID inquirerId) {
@@ -99,20 +86,16 @@ public class SanctionController {
             throw new ForbiddenException(inquirerId);
         }
         String sanitizedSort;
-        switch(sort) {
-            case "likes":
-                sanitizedSort = "likesNumber";
-                break;
-            default:
-                sanitizedSort = "datetime";
+        if (sort.equals("likes")) {
+            sanitizedSort = "likesNumber";
+        } else {
+            sanitizedSort = "datetime";
         }
         Sort sanitizedSortOrder;
-        switch(order.toUpperCase(Locale.ROOT)) {
-            case "ASC":
-                sanitizedSortOrder = Sort.by(sanitizedSort).ascending();
-                break;
-            default:
-                sanitizedSortOrder = Sort.by(sanitizedSort).descending();
+        if (order.toUpperCase(Locale.ROOT).equals("ASC")) {
+            sanitizedSortOrder = Sort.by(sanitizedSort).ascending();
+        } else {
+            sanitizedSortOrder = Sort.by(sanitizedSort).descending();
         }
 
         PageRequest pageRequest = PageRequest.of(
@@ -122,10 +105,10 @@ public class SanctionController {
         );
         Page<Sanction> sanctionsPage = sanctionRepository.findAll(pageRequest);
         sanctionsPage.getContent().forEach(s -> {
-            if (likeRepository.findByLikedGuidAndLikerGuid(s.getId(), inquirerId).isEmpty()) {
-                s.setLiked(Boolean.FALSE);
-            } else {
+            if (likeRepository.existsByLikedGuidAndLikerGuid(s.getId(), inquirerId)) {
                 s.setLiked(Boolean.TRUE);
+            } else {
+                s.setLiked(Boolean.FALSE);
             }
         });
 
@@ -143,7 +126,7 @@ public class SanctionController {
         }
         Sanction sanction = sanctionRepository.findById(id)
                 .orElseThrow(() -> new SanctionNotFoundException(id));
-        if (likeRepository.findByLikedGuidAndLikerGuid(sanction.getId(), inquirerId).isEmpty()) {
+        if (likeRepository.existsByLikedGuidAndLikerGuid(sanction.getId(), inquirerId)) {
             sanction.setLiked(Boolean.FALSE);
         } else {
             sanction.setLiked(Boolean.TRUE);
@@ -161,7 +144,7 @@ public class SanctionController {
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isPresent()) {
+        if(likeRepository.existsByLikedGuidAndLikerGuid(id, inquirerId)) {
             throw new AlreadyLikedException(id, inquirerId);
         }
         Like newLike = new Like();
@@ -184,14 +167,13 @@ public class SanctionController {
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isEmpty()) {
+        if(!likeRepository.existsByLikedGuidAndLikerGuid(id, inquirerId)) {
             throw new LikeNotFoundException(id, inquirerId);
         }
         Like deletableLike = likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).get();
         updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() - 1);
-        sanctionRepository.save(updatableSanction);
-        likeRepository.delete(deletableLike);
         updatableSanction.setLiked(Boolean.FALSE);
-        return ResponseEntity.ok(updatableSanction);
+        likeRepository.delete(deletableLike);
+        return ResponseEntity.ok(sanctionRepository.save(updatableSanction));
     }
 }

@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
-import type {User, Sanction, Account, SpringPage} from '../types';
+import type { User, Sanction, Account, SpringPage } from '../types';
+
+export type SortField = 'datetime' | 'likes';
+export type SortOrder = 'asc' | 'desc';
 
 export function usePiggyBank() {
     const [users, setUsers] = useState<User[]>([]);
@@ -10,11 +13,28 @@ export function usePiggyBank() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Pagination & Sorting States
+    const [page, setPage] = useState<number>(0);
+    const [size, setSize] = useState<number>(10);
+    const [totalPages, setTotalPages] = useState<number>(0);
+    const [sort, setSort] = useState<SortField>('datetime');
+    const [order, setOrder] = useState<SortOrder>('desc');
+
     // Use React Router to watch query string parameters
     const [searchParams] = useSearchParams();
     const inquirerId = searchParams.get('inquirerid');
 
-    const fetchData = async () => {
+    // Re-fetch data instantly if the logged-in user changes in the URL
+    useEffect(() => {
+        fetchData();
+    }, [inquirerId]);
+
+    // Reset to first page if logged-in user changes
+    useEffect(() => {
+        setPage(0);
+    }, [inquirerId]);
+
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -28,20 +48,29 @@ export function usePiggyBank() {
                 setError('Could not load user directory.');
             }
 
-            // 2. Fetch Sanctions only if inquirerId is active, otherwise reset array
+            // 2. Fetch Paginated & Sorted Sanctions only if inquirerId is active, otherwise reset array
             if (inquirerId) {
                 try {
                     const sanctionsRes = await api.get<SpringPage<Sanction>>('/sanctions', {
-                        params: { inquirerid: inquirerId }
+                        params: {
+                            inquirerid: inquirerId,
+                            page,
+                            size,
+                            sort,   // 'datetime' or 'likes' (matches your Java switch case)
+                            order   // 'asc' or 'desc'
+                        }
                     });
                     setSanctions(sanctionsRes.data.content);
+                    setTotalPages(sanctionsRes.data.totalPages);
                 } catch (sanctionErr) {
                     console.error('Failed to load sanctions secure view:', sanctionErr);
                     // Don't crash the whole hook; just set an isolated view state error or clear ledger
                     setSanctions([]);
+                    setTotalPages(0);
                 }
             } else {
                 setSanctions([]); // Clear if no one is logged in
+                setTotalPages(0);
             }
 
             // 3. Fetch Accounts independently (This should always work)
@@ -57,11 +86,27 @@ export function usePiggyBank() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [inquirerId, page, size, sort, order]);
 
     useEffect(() => {
         fetchData();
-    }, [inquirerId]); // Re-fetch data instantly if the logged-in user changes in the URL
+    }, [fetchData]);
+
+    // Helper handlers that reset page to 0 when sort/order/size changes
+    const handleSortChange = (newSort: SortField) => {
+        setSort(newSort);
+        setPage(0);
+    };
+
+    const handleOrderChange = (newOrder: SortOrder) => {
+        setOrder(newOrder);
+        setPage(0);
+    };
+
+    const handleSizeChange = (newSize: number) => {
+        setSize(newSize);
+        setPage(0);
+    };
 
     const createSanction = async (newSanction: { receiverGuid: string; reason: string; amount: string }) => {
         if (!inquirerId) return;
@@ -79,6 +124,7 @@ export function usePiggyBank() {
             await api.post('/sanctions', payload, {
                 params: { inquirerid: inquirerId } // Append the query parameter if your security filter requires it
             });
+            setPage(0);
             await fetchData(); // Refresh the list of sanctions instantly on success!
         } catch (err) {
             console.error('Failed to issue sanction:', err);
@@ -120,13 +166,19 @@ export function usePiggyBank() {
             throw new Error('Could not delete user from the server.');
         }
     };
+
     const likeSanction = async (sanctionId: string) => {
         if (!inquirerId) return;
 
         try {
-            await api.post(`/sanctions/${sanctionId}/like`, null, {
+            // Backend returns the updated Sanction with liked = true and incremented likesNumber
+            const res = await api.post<Sanction>(`/sanctions/${sanctionId}/like`, null, {
                 params: { inquirerid: inquirerId }
             });
+
+            setSanctions(prev =>
+                prev.map(s => (s.id === sanctionId ? res.data : s))
+            );
 
             // Refresh data instantly so the UI updates the like count and likedBy list
             await fetchData();
@@ -140,9 +192,14 @@ export function usePiggyBank() {
         if (!inquirerId) return;
 
         try {
-            await api.delete(`/sanctions/${sanctionId}/like`, {
+            // Backend returns the updated Sanction with liked = false and decremented likesNumber
+            const res = await api.delete<Sanction>(`/sanctions/${sanctionId}/like`, {
                 params: { inquirerid: inquirerId }
             });
+
+            setSanctions(prev =>
+                prev.map(s => (s.id === sanctionId ? res.data : s))
+            );
 
             // Refresh data instantly so the UI updates the like count and likedBy list
             await fetchData();
@@ -159,7 +216,6 @@ export function usePiggyBank() {
             await api.put(`/accounts/${accountId}/reset`, null, {
                 params: { inquirerid: inquirerId }
             });
-
             // Refresh data instantly so the UI updates the like count and likedBy list
             await fetchData();
         } catch (err) {
@@ -171,5 +227,31 @@ export function usePiggyBank() {
     // Find the full User object corresponding to the URL ID if it exists
     const currentUser = users.find(u => u.id === inquirerId) || null;
 
-    return { users, sanctions, accounts, loading, error, currentUser, inquirerId, likeSanction, unlikeSanction, createSanction, resetAccount, createUser, deleteUser, refresh: fetchData };
+    return {
+        users,
+        sanctions,
+        accounts,
+        loading,
+        error,
+        currentUser,
+        inquirerId,
+        // Pagination & Sorting exports
+        page,
+        setPage,
+        size,
+        setSize: handleSizeChange,
+        totalPages,
+        sort,
+        setSort: handleSortChange,
+        order,
+        setOrder: handleOrderChange,
+        // Actions
+        likeSanction,
+        unlikeSanction,
+        createSanction,
+        resetAccount,
+        createUser,
+        deleteUser,
+        refresh: fetchData
+    };
 }

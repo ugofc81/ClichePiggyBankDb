@@ -75,7 +75,7 @@ class SanctionControllerTest {
                         .content(objectMapper.writeValueAsString(newSanction)))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("User with id '" + receiverId.toString() + "' was not found."));
+                .andExpect(jsonPath("$.message").value("User with id '" + receiverId + "' was not found."));
     }
 
     @Test
@@ -96,7 +96,7 @@ class SanctionControllerTest {
                         .content(objectMapper.writeValueAsString(newSanction)))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Inquirer with id '" + inquirerId.toString() + "' was not found."));
+                .andExpect(jsonPath("$.message").value("Inquirer with id '" + inquirerId + "' was not found."));
     }
 
     @Test
@@ -118,7 +118,7 @@ class SanctionControllerTest {
                         .content(objectMapper.writeValueAsString(newSanction)))
                 .andDo(print())
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Inquirer with id '" + inquirerId.toString() + "' did not have enough rights to perform the request."));
+                .andExpect(jsonPath("$.message").value("Inquirer with id '" + inquirerId + "' did not have enough rights to perform the request."));
     }
 
     @Test
@@ -273,8 +273,8 @@ class SanctionControllerTest {
         String page = "0";
         Sort sanitizedSortOrder = Sort.by(sort).ascending();
         PageRequest pageRequest = PageRequest.of(
-                Integer.valueOf(page),
-                Integer.valueOf(size),
+                Integer.parseInt(page),
+                Integer.parseInt(size),
                 sanitizedSortOrder
         );
 
@@ -318,8 +318,8 @@ class SanctionControllerTest {
 
         String sort = "datetime";
         PageRequest pageRequest = PageRequest.of(
-                Integer.valueOf("0"),
-                Integer.valueOf("10"),
+                Integer.parseInt("0"),
+                Integer.parseInt("10"),
                 Sort.by(sort).descending()
         );
 
@@ -478,7 +478,6 @@ class SanctionControllerTest {
         //define inquirer
         User inquirer = configureInquirer();
         //define existing sanction
-        UUID otherUserId = UUID.randomUUID();
         Sanction sanction = produceSanction(UUID.randomUUID(), 1L, 1);
         List<Sanction> sanctions = new ArrayList<>();
         sanctions.add(sanction);
@@ -504,7 +503,6 @@ class SanctionControllerTest {
         like.setId(UUID.randomUUID());
         like.setLikedGuid(sanction.getId());
         like.setLikerGuid(inquirer.getId());
-        List<Like> emptyLikes = new ArrayList<>();
         //mock like search
         Mockito.when(likeRepository.findByLikedGuidAndLikerGuid(sanction.getId(), inquirer.getId())).thenReturn(Optional.empty());
         Mockito.when(sanctionRepository.save(sanction)).thenReturn(sanction);
@@ -536,7 +534,6 @@ class SanctionControllerTest {
         //define inquirer
         User inquirer = configureInquirer();
         //define existing sanction
-        UUID otherUserId = UUID.randomUUID();
         Sanction sanction = produceSanction(UUID.randomUUID(), 1L, 1);
         List<Sanction> sanctions = new ArrayList<>();
         sanctions.add(sanction);
@@ -562,8 +559,8 @@ class SanctionControllerTest {
         like.setId(UUID.randomUUID());
         like.setLikedGuid(sanction.getId());
         like.setLikerGuid(inquirer.getId());
-        List<Like> emptyLikes = new ArrayList<>();
         //mock like search
+        Mockito.when(likeRepository.existsByLikedGuidAndLikerGuid(sanction.getId(), inquirer.getId())).thenReturn(Boolean.TRUE);
         Mockito.when(likeRepository.findByLikedGuidAndLikerGuid(sanction.getId(), inquirer.getId())).thenReturn(Optional.of(like));
         Mockito.when(sanctionRepository.save(sanction)).thenReturn(sanction);
         Mockito.doNothing().when(likeRepository).delete(like);
