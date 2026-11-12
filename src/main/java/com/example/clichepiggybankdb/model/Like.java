@@ -19,11 +19,11 @@ public class Like {
     @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16)
     private UUID id;
 
-    @Column(nullable = false, unique = false, name = "liked_guid", length = 16)
+    @Column(nullable = false, name = "liked_guid", length = 16)
     @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16)
     private UUID likedGuid;
 
-    @Column(nullable = false, unique = false, name = "liker_guid", length = 16)
+    @Column(nullable = false, name = "liker_guid", length = 16)
     @JdbcTypeCode(SqlTypes.BINARY) // Forces Hibernate to use MySQL's BINARY(16)
     private UUID likerGuid;
 

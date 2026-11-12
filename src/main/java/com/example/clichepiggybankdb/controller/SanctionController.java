@@ -23,8 +23,6 @@ public class SanctionController {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final LikeRepository likeRepository;
-    private final static int AMOUNT_OF_LAST_SANCTIONS = 10;
-    public final static String LAST_SANCTIONS_QUERY = "SELECT s FROM sanctions s ORDER BY s.datetime DESC";
 
     public SanctionController(
             SanctionRepository sanctionRepository,
@@ -39,17 +37,6 @@ public class SanctionController {
         this.roleRepository = roleRepository;
         this.likeRepository = likeRepository;
     }
-
-//    @GetMapping("/all")
-//    public ResponseEntity<List<Sanction>> getAllSanctions(@RequestParam("inquirerid") UUID inquirerId) {
-//        if(!userRepository.existsById(inquirerId)) {
-//            throw new InquirerNotFoundException(inquirerId);
-//        }
-//        if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
-//            throw new ForbiddenException(inquirerId);
-//        }
-//        return ResponseEntity.ok(new ArrayList<>(sanctionRepository.findAll()));
-//    }
 
     @PostMapping
     public ResponseEntity<Sanction> createSanction(@RequestBody Sanction newSanction, @RequestParam("inquirerid") UUID inquirerId) {
@@ -99,20 +86,16 @@ public class SanctionController {
             throw new ForbiddenException(inquirerId);
         }
         String sanitizedSort;
-        switch(sort) {
-            case "likes":
-                sanitizedSort = "likesNumber";
-                break;
-            default:
-                sanitizedSort = "datetime";
+        if (sort.equals("likes")) {
+            sanitizedSort = "likesNumber";
+        } else {
+            sanitizedSort = "datetime";
         }
         Sort sanitizedSortOrder;
-        switch(order.toUpperCase(Locale.ROOT)) {
-            case "ASC":
-                sanitizedSortOrder = Sort.by(sanitizedSort).ascending();
-                break;
-            default:
-                sanitizedSortOrder = Sort.by(sanitizedSort).descending();
+        if (order.toUpperCase(Locale.ROOT).equals("ASC")) {
+            sanitizedSortOrder = Sort.by(sanitizedSort).ascending();
+        } else {
+            sanitizedSortOrder = Sort.by(sanitizedSort).descending();
         }
 
         PageRequest pageRequest = PageRequest.of(

@@ -562,8 +562,8 @@ class SanctionControllerTest {
         like.setId(UUID.randomUUID());
         like.setLikedGuid(sanction.getId());
         like.setLikerGuid(inquirer.getId());
-        List<Like> emptyLikes = new ArrayList<>();
         //mock like search
+        Mockito.when(likeRepository.existsByLikedGuidAndLikerGuid(sanction.getId(), inquirer.getId())).thenReturn(Boolean.TRUE);
         Mockito.when(likeRepository.findByLikedGuidAndLikerGuid(sanction.getId(), inquirer.getId())).thenReturn(Optional.of(like));
         Mockito.when(sanctionRepository.save(sanction)).thenReturn(sanction);
         Mockito.doNothing().when(likeRepository).delete(like);
