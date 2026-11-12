@@ -122,10 +122,10 @@ public class SanctionController {
         );
         Page<Sanction> sanctionsPage = sanctionRepository.findAll(pageRequest);
         sanctionsPage.getContent().forEach(s -> {
-            if (likeRepository.findByLikedGuidAndLikerGuid(s.getId(), inquirerId).isEmpty()) {
-                s.setLiked(Boolean.FALSE);
-            } else {
+            if (likeRepository.existsByLikedGuidAndLikerGuid(s.getId(), inquirerId)) {
                 s.setLiked(Boolean.TRUE);
+            } else {
+                s.setLiked(Boolean.FALSE);
             }
         });
 
@@ -143,7 +143,7 @@ public class SanctionController {
         }
         Sanction sanction = sanctionRepository.findById(id)
                 .orElseThrow(() -> new SanctionNotFoundException(id));
-        if (likeRepository.findByLikedGuidAndLikerGuid(sanction.getId(), inquirerId).isEmpty()) {
+        if (likeRepository.existsByLikedGuidAndLikerGuid(sanction.getId(), inquirerId)) {
             sanction.setLiked(Boolean.FALSE);
         } else {
             sanction.setLiked(Boolean.TRUE);
@@ -161,7 +161,7 @@ public class SanctionController {
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isPresent()) {
+        if(likeRepository.existsByLikedGuidAndLikerGuid(id, inquirerId)) {
             throw new AlreadyLikedException(id, inquirerId);
         }
         Like newLike = new Like();
@@ -184,14 +184,13 @@ public class SanctionController {
         if (!UserController.isUser(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
         }
-        if(likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).isEmpty()) {
+        if(!likeRepository.existsByLikedGuidAndLikerGuid(id, inquirerId)) {
             throw new LikeNotFoundException(id, inquirerId);
         }
         Like deletableLike = likeRepository.findByLikedGuidAndLikerGuid(id, inquirerId).get();
         updatableSanction.setLikesNumber(updatableSanction.getLikesNumber() - 1);
-        sanctionRepository.save(updatableSanction);
-        likeRepository.delete(deletableLike);
         updatableSanction.setLiked(Boolean.FALSE);
-        return ResponseEntity.ok(updatableSanction);
+        likeRepository.delete(deletableLike);
+        return ResponseEntity.ok(sanctionRepository.save(updatableSanction));
     }
 }

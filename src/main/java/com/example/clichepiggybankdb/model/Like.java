@@ -7,7 +7,10 @@ import org.hibernate.type.SqlTypes;
 import java.util.UUID;
 
 @Entity
-@Table(name = "likes") // Maps this class to a "users" table in MySQL
+@Table(
+        name = "likes",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"liked_guid", "liker_guid"})
+)
 public class Like {
 
     @Id
