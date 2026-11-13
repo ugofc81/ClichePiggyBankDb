@@ -46,6 +46,7 @@ At least Level 1 must be completed. Whether Levels 2 and 3 will also be implemen
 ## Data persistence
 Initially would read from/write into a json file, later I introduced Hibernate and persisted data on a MySQL database.
 This introduction was a major modification and I therefore created the current project in a separate repository.
+Likes and roles are treated as separate entities instead of making more complex (respectively) sanctions and users.
 
 ## Frontend
 Created with React. A landing page is provided, that guides to three dedicated pages for:
