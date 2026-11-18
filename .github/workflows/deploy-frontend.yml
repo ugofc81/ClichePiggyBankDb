@@ -40,3 +40,9 @@ jobs:
         run: |
           # 🆕 Uses the relative path to sync your built dist folder inside the subfolder
           aws s3 sync dist/ s3://cliche-piggybank-frontend-acc --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id EZZFUE5VKW36K \
+            --paths "/*"
