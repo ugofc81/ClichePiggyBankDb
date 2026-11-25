@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AlreadyLikedException.class)
-    public ResponseEntity<Map<String, Object>> handleAlreadyLiked(LikeNotFoundException ex) {
+    public ResponseEntity<Map<String, Object>> handleAlreadyLiked(AlreadyLikedException ex) {
         Map<String, Object> body = Map.of(
                 "status", HttpStatus.CONFLICT.value(),
                 "error", "Conflict",
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAccountNotEmpty(AccountNotEmptyException ex) {
         Map<String, Object> body = Map.of(
                 "status", HttpStatus.FORBIDDEN.value(),
-                "error", "Not Found",
+                "error", "Forbidden",
                 "message", ex.getMessage()
         );
         return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
