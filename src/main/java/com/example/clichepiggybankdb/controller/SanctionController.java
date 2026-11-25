@@ -127,9 +127,9 @@ public class SanctionController {
         Sanction sanction = sanctionRepository.findById(id)
                 .orElseThrow(() -> new SanctionNotFoundException(id));
         if (likeRepository.existsByLikedGuidAndLikerGuid(sanction.getId(), inquirerId)) {
-            sanction.setLiked(Boolean.FALSE);
-        } else {
             sanction.setLiked(Boolean.TRUE);
+        } else {
+            sanction.setLiked(Boolean.FALSE);
         }
         return ResponseEntity.ok(sanction);
     }
