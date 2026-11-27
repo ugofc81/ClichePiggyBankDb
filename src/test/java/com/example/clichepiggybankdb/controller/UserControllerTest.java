@@ -3,14 +3,13 @@ package com.example.clichepiggybankdb.controller;
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.User;
-import com.example.clichepiggybankdb.service.AccountRepository;
-import com.example.clichepiggybankdb.service.RoleRepository;
-import com.example.clichepiggybankdb.service.UserRepository;
-import org.hibernate.annotations.ManyToAny;
+import com.example.clichepiggybankdb.service.*;
+import com.example.clichepiggybankdb.repository.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +27,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -89,8 +89,6 @@ public class UserControllerTest {
         Role userRole = new Role();
         userRole.setUserGuid(createdUser.getId());
         userRole.setRole("user");
-        List userRoles = new ArrayList<>(List.of(userRole));
-
         Mockito.when(userRepository.existsById(inquirer.getId())).thenReturn(Boolean.TRUE);
         //define admin roles
         List<Role> adminRoles = new ArrayList<>();
@@ -242,8 +240,6 @@ public class UserControllerTest {
         Role userRole = new Role();
         userRole.setUserGuid(createdUser.getId());
         userRole.setRole("user");
-        List userRoles = new ArrayList<>(List.of(userRole));
-
         Mockito.when(userRepository.existsById(inquirer.getId())).thenReturn(Boolean.FALSE);
         mockMvc.perform(post("/api/users")
                         .param("inquirerid", inquirer.getId().toString())

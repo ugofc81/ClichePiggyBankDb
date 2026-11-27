@@ -4,13 +4,14 @@ import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.User;
 import com.example.clichepiggybankdb.service.*;
+import com.example.clichepiggybankdb.repository.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +23,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AccountController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class AccountControllerTest {
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockitoBean
     private UserRepository userRepository;
@@ -149,8 +148,6 @@ class AccountControllerTest {
 
         List<User> userList = new ArrayList<>();
         userList.add(adminUser);
-
-        Account noAccount;
 
         Mockito.when(accountRepository.existsById(missingAccountId)).thenReturn(Boolean.FALSE);
 

@@ -1,4 +1,4 @@
-package com.example.clichepiggybankdb.service;
+package com.example.clichepiggybankdb.repository;
 
 import com.example.clichepiggybankdb.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;

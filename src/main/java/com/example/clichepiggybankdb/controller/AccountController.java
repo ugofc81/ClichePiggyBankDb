@@ -1,10 +1,8 @@
 package com.example.clichepiggybankdb.controller;
 
-import com.example.clichepiggybankdb.controller.exceptions.AccountNotFoundException;
-import com.example.clichepiggybankdb.controller.exceptions.ForbiddenException;
-import com.example.clichepiggybankdb.controller.exceptions.UserNotFoundException;
 import com.example.clichepiggybankdb.model.Account;
-import com.example.clichepiggybankdb.service.*;
+import com.example.clichepiggybankdb.repository.*;
+import com.example.clichepiggybankdb.service.AccountService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,60 +14,26 @@ import java.util.UUID;
 @RequestMapping("/api/accounts")
 @CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class AccountController {
-    private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final AccountService accountService;
 
     public AccountController(
-            AccountRepository accountRepository,
-            UserRepository userRepository,
-            RoleRepository roleRepository
+            AccountService accountService
     ) {
-        this.accountRepository = accountRepository;
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+        this.accountService = accountService;
     }
 
     @GetMapping
     public ResponseEntity<List<Account>> getAllAccounts() {
-        return ResponseEntity.ok(new ArrayList<>(accountRepository.findAll()));
+        return ResponseEntity.ok(new ArrayList<>(accountService.getAll()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Account> getAccount(@PathVariable UUID id) {
-        return ResponseEntity.ok(accountRepository
-                .findById(id)
-                .orElseThrow(() -> new AccountNotFoundException(id)));
+        return ResponseEntity.ok(accountService.get(id));
     }
-
-//    public ResponseEntity<Account> updateAccount(@PathVariable UUID id, @RequestBody Account updatedAccount) {
-//        if(!accountRepository.existsById(id)) {
-//            throw new AccountNotFoundException(id);
-//        }
-//        return ResponseEntity.ok(accountRepository.save(updatedAccount));
-//    }
-//
-//    public ResponseEntity<Account> deleteAccount(@PathVariable UUID id) {
-//        Account removed = accountRepository
-//                .findById(id)
-//                .orElseThrow(() -> new AccountNotFoundException(id));
-//        accountRepository.deleteById(id);
-//        return ResponseEntity.ok(removed);
-//    }
 
     @PutMapping("/{id}/reset")
     public ResponseEntity<Account> resetAccount(@PathVariable UUID id, @RequestParam("inquirerid") UUID inquirerId) {
-        if(!userRepository.existsById(inquirerId)) {
-            throw new UserNotFoundException(id);
-        }
-        if (!UserController.isAdmin(roleRepository.findByUserGuid(inquirerId))) {
-            throw new ForbiddenException(inquirerId);
-        }
-        Account current = accountRepository
-                .findById(id)
-                .orElseThrow(() -> new AccountNotFoundException(id));
-        current.setBalance(0);
-        return ResponseEntity.ok(accountRepository.save(current));
-
+        return ResponseEntity.ok(accountService.reset(id, inquirerId));
     }
 }

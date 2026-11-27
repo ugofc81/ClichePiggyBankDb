@@ -2,8 +2,10 @@ package com.example.clichepiggybankdb.controller;
 
 import com.example.clichepiggybankdb.model.*;
 import com.example.clichepiggybankdb.service.*;
+import com.example.clichepiggybankdb.repository.*;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -20,7 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(SanctionController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class SanctionControllerTest {
 
     @Autowired
