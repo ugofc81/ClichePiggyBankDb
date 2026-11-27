@@ -1,8 +1,8 @@
 package com.example.clichepiggybankdb.service;
 
-import com.example.clichepiggybankdb.controller.exceptions.AccountNotFoundException;
-import com.example.clichepiggybankdb.controller.exceptions.ForbiddenException;
-import com.example.clichepiggybankdb.controller.exceptions.InquirerNotFoundException;
+import com.example.clichepiggybankdb.exceptions.AccountNotFoundException;
+import com.example.clichepiggybankdb.exceptions.ForbiddenException;
+import com.example.clichepiggybankdb.exceptions.InquirerNotFoundException;
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.repository.*;
 import org.springframework.stereotype.Service;

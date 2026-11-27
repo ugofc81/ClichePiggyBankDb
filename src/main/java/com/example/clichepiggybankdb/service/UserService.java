@@ -1,6 +1,6 @@
 package com.example.clichepiggybankdb.service;
 
-import com.example.clichepiggybankdb.controller.exceptions.*;
+import com.example.clichepiggybankdb.exceptions.*;
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.model.Role;
 import com.example.clichepiggybankdb.model.User;
@@ -32,7 +32,7 @@ public class UserService {
     }
 
     @Transactional
-    public User get(UUID userId) throws UserNotFoundException{
+    public User get(UUID userId) throws UserNotFoundException {
         return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     }
 
