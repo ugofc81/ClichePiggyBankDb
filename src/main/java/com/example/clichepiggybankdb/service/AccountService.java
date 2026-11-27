@@ -3,7 +3,6 @@ package com.example.clichepiggybankdb.service;
 import com.example.clichepiggybankdb.controller.exceptions.AccountNotFoundException;
 import com.example.clichepiggybankdb.controller.exceptions.ForbiddenException;
 import com.example.clichepiggybankdb.controller.exceptions.InquirerNotFoundException;
-import com.example.clichepiggybankdb.controller.exceptions.UserNotFoundException;
 import com.example.clichepiggybankdb.model.Account;
 import com.example.clichepiggybankdb.repository.*;
 import org.springframework.stereotype.Service;
@@ -40,9 +39,9 @@ public class AccountService {
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
     @Transactional
-    public Account reset(UUID accountId, UUID inquirerId) throws UserNotFoundException, ForbiddenException, AccountNotFoundException {
+    public Account reset(UUID accountId, UUID inquirerId) throws InquirerNotFoundException, ForbiddenException, AccountNotFoundException {
         if(!userRepository.existsById(inquirerId)) {
-        throw new UserNotFoundException(accountId);
+        throw new InquirerNotFoundException(accountId);
     }
         if (!UserService.isAdmin(roleRepository.findByUserGuid(inquirerId))) {
             throw new ForbiddenException(inquirerId);
@@ -53,21 +52,4 @@ public class AccountService {
         current.setBalance(0);
         return accountRepository.save(current);
     }
-
-//    public Account updateAccount(UUID id, Account updatedAccount) {
-//        if(!accountRepository.existsById(id)) {
-//            throw new AccountNotFoundException(id);
-//        }
-//        return accountRepository.save(updatedAccount);
-//    }
-//
-//    public Account deleteAccount(UUID id) {
-//        Account removed = accountRepository
-//                .findById(id)
-//                .orElseThrow(() -> new AccountNotFoundException(id));
-//        accountRepository.deleteById(id);
-//        return removed;
-//    }
-
-
 }

@@ -387,13 +387,14 @@ class SanctionControllerTest {
         like.setLikerGuid(reporter.getId());
         like.setLikedGuid(sanctionId);
         Mockito.when(sanctionRepository.findById(sanctionId)).thenReturn(Optional.of(sanction));
-        Mockito.when(likeRepository.findByLikedGuidAndLikerGuid(sanctionId, reporter.getId())).thenReturn(Optional.of(like));
+        Mockito.when(likeRepository.existsByLikedGuidAndLikerGuid(sanctionId, reporter.getId())).thenReturn(Boolean.TRUE);
 
         mockMvc.perform(get("/api/sanctions/{id}", sanctionId)
                         .param("inquirerid", reporter.getId().toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(sanctionId.toString()))
+                .andExpect(jsonPath("$.liked").value(Boolean.TRUE))
                 .andExpect(jsonPath("$.receiverGuid").value(receiver.getId().toString()));
     }
 
