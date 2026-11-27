@@ -30,9 +30,6 @@ class AccountControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private UserRepository userRepository;
 
@@ -152,8 +149,6 @@ class AccountControllerTest {
 
         List<User> userList = new ArrayList<>();
         userList.add(adminUser);
-
-        Account noAccount;
 
         Mockito.when(accountRepository.existsById(missingAccountId)).thenReturn(Boolean.FALSE);
 

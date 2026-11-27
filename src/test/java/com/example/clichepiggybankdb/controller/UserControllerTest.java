@@ -89,8 +89,6 @@ public class UserControllerTest {
         Role userRole = new Role();
         userRole.setUserGuid(createdUser.getId());
         userRole.setRole("user");
-        List userRoles = new ArrayList<>(List.of(userRole));
-
         Mockito.when(userRepository.existsById(inquirer.getId())).thenReturn(Boolean.TRUE);
         //define admin roles
         List<Role> adminRoles = new ArrayList<>();
@@ -242,8 +240,6 @@ public class UserControllerTest {
         Role userRole = new Role();
         userRole.setUserGuid(createdUser.getId());
         userRole.setRole("user");
-        List userRoles = new ArrayList<>(List.of(userRole));
-
         Mockito.when(userRepository.existsById(inquirer.getId())).thenReturn(Boolean.FALSE);
         mockMvc.perform(post("/api/users")
                         .param("inquirerid", inquirer.getId().toString())

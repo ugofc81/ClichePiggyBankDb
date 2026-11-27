@@ -79,10 +79,10 @@ public class UserService {
 
         List<Account> toBeVerified = accountRepository.findByOwnerGuid(userId);
         if (!toBeVerified.isEmpty()) {
-            if (toBeVerified.get(0).getBalance() > 0) {
-                throw new AccountNotEmptyException(toBeVerified.get(0).getId());
+            if (toBeVerified.getFirst().getBalance() > 0) {
+                throw new AccountNotEmptyException(toBeVerified.getFirst().getId());
             } else {
-                accountRepository.deleteById(toBeVerified.get(0).getId());
+                accountRepository.deleteById(toBeVerified.getFirst().getId());
             }
         }
         List<Role> rolesToBeDeleted = rolesRepository.findByUserGuid(userId);
@@ -94,7 +94,7 @@ public class UserService {
     @Transactional
     public User register(User newUser) throws InquirerNotFoundException, ForbiddenException {
         List<User> users = userRepository.findAll();
-        if (users.size() > 0) {
+        if (!users.isEmpty()) {
             throw new GoneException("first registering");
         }
 
