@@ -13,7 +13,7 @@ It started as a take-home exercise (a JSON-file backend) and grew into a learnin
 | Backend | Java 25, Spring Boot 4.1, Spring Web, Spring Data JPA (Hibernate), Gradle |
 | Database | MySQL (Amazon RDS in the cloud) |
 | Frontend | React 19, TypeScript, Vite, React Router, Axios |
-| Tests | JUnit 5, Spring MockMvc (`@WebMvcTest`), Mockito, JaCoCo coverage report |
+| Tests | JUnit 5, Spring Boot tests with MockMvc and mocked repositories, MySQL needed to load context , Mockito, JaCoCo coverage report |
 | Delivery | GitHub Actions |
 | Hosting | AWS: Elastic Beanstalk (API), RDS for MySQL, S3 + CloudFront (frontend) |
 
