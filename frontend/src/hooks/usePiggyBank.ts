@@ -153,6 +153,23 @@ export function usePiggyBank() {
         }
     };
 
+    const registerAdmin = async (newUser: { name: string; roles: string[]; }) => {
+        // Build the payload matching what your Spring Boot Controller expects
+        // If your backend maps using entire objects, we pass the IDs or look them up
+        const payload = {
+            name: newUser.name,
+            roles: newUser.roles,
+        };
+
+        try {
+            await api.post('/users/register', payload);
+            await fetchData(); // Refresh the list of sanctions instantly on success!
+        } catch (err) {
+            console.error('Failed to create user:', err);
+            throw new Error('Could not create user into the server.');
+        }
+    };
+
     const deleteUser = async (userId: string) => {
         if (!inquirerId) return;
 
@@ -251,6 +268,7 @@ export function usePiggyBank() {
         createSanction,
         resetAccount,
         createUser,
+        registerAdmin,
         deleteUser,
         refresh: fetchData
     };
