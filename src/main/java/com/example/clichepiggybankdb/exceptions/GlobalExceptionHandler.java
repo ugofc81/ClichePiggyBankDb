@@ -1,6 +1,5 @@
-package com.example.clichepiggybankdb.controller;
+package com.example.clichepiggybankdb.exceptions;
 
-import com.example.clichepiggybankdb.controller.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

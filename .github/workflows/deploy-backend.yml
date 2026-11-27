@@ -7,6 +7,21 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4            # use the same major version as your RDS instance
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: user_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -psecret"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -27,7 +42,7 @@ jobs:
       - name: Build and Test JAR with Gradle
         run: |
           chmod +x ./gradlew
-          ./gradlew clean build -x test # (Remove '-x test' if you want tests to run during build)
+          ./gradlew clean build
 
       # 4. Authenticate securely with AWS
       - name: Configure AWS Credentials
