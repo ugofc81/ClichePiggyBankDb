@@ -3,7 +3,7 @@ import { usePiggyBank } from '../hooks/usePiggyBank';
 import React, {useState} from "react";
 
 export default function Users() {
-    const { users, loading, error, inquirerId, createUser, deleteUser } = usePiggyBank();
+    const { users, loading, error, inquirerId, createUser, deleteUser, registerAdmin } = usePiggyBank();
 
     // Local Form States
     const [name, setName] = useState('');
@@ -46,6 +46,31 @@ export default function Users() {
         }
     };
 
+    const handleRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!name || !roles) {
+            setFormError('Please complete all form fields.');
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            setFormError(null);
+
+            if (registerAdmin) {
+                await registerAdmin({ name, roles });
+                // Clear form values on success
+                setName('');
+                setRoles(['']);
+                alert('User created successfully!');
+            }
+        } catch (err: any) {
+            setFormError(err.message || 'Submission failed.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     // Helper string to attach to navigation links so pages don't lose the query string context
     const querySuffix = inquirerId ? `?inquirerid=${inquirerId}` : '';
 
@@ -59,7 +84,7 @@ export default function Users() {
                 {/* --- LEFT PANEL: CREATE USER FORM --- */}
                 <div style={{ flex: 1, borderRight: '1px solid #eee', paddingRight: '40px' }}>
                     <h3>Create a New User</h3>
-                    <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <form onSubmit={users.length > 0 ? handleCreate: handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         <div>
                             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>User name:</label>
                             <textarea
