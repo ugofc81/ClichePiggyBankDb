@@ -114,7 +114,7 @@ The controller tests mock the repositories and cover the main flows and error ca
 I'm listing these deliberately; they are the next things I would change.
 
 - **No real authentication yet (planned).** The acting user is identified by an ID in the query string, and "login" in the UI just selects a user. This is enough for a trusted-team demo but not for production. Next step: Spring Security with JWT or AWS Cognito.
-- **Pipeline.** Tests should run in CI before every deployment, and AWS access should move from stored keys to GitHub OIDC.
+- **Pipeline.** Tests should run in CI before every deployment.
 - **Frontend tests** are still missing.
 
 ## License
