@@ -1,6 +1,6 @@
-package com.example.clichepiggybankdb.service;
+package com.example.clichepiggybankdb.repository;
 
-import com.example.clichepiggybankdb.model.Account;
+import com.example.clichepiggybankdb.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface AccountRepository extends JpaRepository<Account, UUID> {
+public interface RoleRepository extends JpaRepository<Role, UUID> {
     // Inherits: save(), findAll(), findById(), deleteById() automatically!
-    List<Account> findByOwnerGuid(UUID ownerGuid);
+    List<Role> findByUserGuid(UUID userId);
 }
